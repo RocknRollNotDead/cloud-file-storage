@@ -1,5 +1,9 @@
 package ru.codeportfolio.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,9 +22,9 @@ public class UsersController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserDto> getInfo(/* тут будет jwt*/) {
-
-        UserDto userDto = service.getInfo(/*jwt*/);
+    public ResponseEntity<UserDto> getInfo(Authentication authentication) {
+        String username = authentication.name();
+        UserDto userDto = service.getInfo(username);
         return ResponseEntity.ok(userDto);
     }
 

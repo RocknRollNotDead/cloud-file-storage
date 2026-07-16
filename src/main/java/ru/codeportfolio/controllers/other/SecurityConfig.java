@@ -36,12 +36,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/api/auth/sing-in")
-//                        .defaultSuccessUrl("/home", true)
+                        .loginPage("/api/auth/sign-in")
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/api/auth/sing-out")
+                        .logoutUrl("/api/auth/sign-out")
+                        .logoutSuccessUrl("/api/auth/sign-in")
                         .permitAll()
                 );
 
@@ -64,7 +64,7 @@ public class SecurityConfig {
                 return new org.springframework.security.core.userdetails.User(
                         username,
                         user.getPassword(),
-                        Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")));
+                        Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole())));
             }
         };
     }

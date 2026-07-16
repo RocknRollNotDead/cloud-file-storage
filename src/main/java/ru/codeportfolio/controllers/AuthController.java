@@ -19,7 +19,7 @@ public class AuthController {
         this.service = service;
     }
 
-    @PostMapping("/sing-in")
+    @PostMapping("/sign-in")
     public ResponseEntity<UserDto> logIn(
             @RequestParam(name = "username", required = false) String username,
             @RequestParam(name = "password", required = false) String password) {
@@ -28,7 +28,7 @@ public class AuthController {
         return ResponseEntity.ok(userDto);
     }
 
-    @PostMapping("/sing-up")
+    @PostMapping("/sign-up")
     public ResponseEntity<UserDto> createUser(
             @RequestParam(name = "username", required = false) String username,
             @RequestParam(name = "password", required = false) String password) {
@@ -37,7 +37,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
     }
 
-    @PostMapping("/sing-out")
+    @PostMapping("/sign-out")
     public ResponseEntity logOut() {
         service.logOut();
         return ResponseEntity.noContent().build();
