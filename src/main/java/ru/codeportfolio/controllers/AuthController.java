@@ -7,15 +7,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.codeportfolio.dto.UserDto;
-import ru.codeportfolio.services.UsersService;
+import ru.codeportfolio.services.UserService;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final UsersService service;
+    private final UserService service;
 
-    public AuthController(UsersService service) {
+    public AuthController(UserService service) {
         this.service = service;
     }
 

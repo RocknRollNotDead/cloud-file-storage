@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import ru.codeportfolio.Config;
-import ru.codeportfolio.models.Users;
+import ru.codeportfolio.models.User;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
@@ -52,7 +52,7 @@ public class AppRootConfig {
                 .build();
 
         MetadataSources sources = new MetadataSources(registry);
-        sources.addAnnotatedClass(Users.class);
+        sources.addAnnotatedClass(User.class);
 
         Metadata metadata = sources.getMetadataBuilder().build();
         return metadata.getSessionFactoryBuilder().build();
