@@ -61,10 +61,11 @@ public class SecurityConfig {
                 User user =  userRepository
                         .findUsersByLogin(username)
                         .orElseThrow(() -> new UsernameNotFoundException("username not exist " + username));
-                return new org.springframework.security.core.userdetails.User(
-                        username,
-                        user.getPassword(),
-                        Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole())));
+                return org.springframework.security.core.userdetails.User
+                        .withUsername(username)
+                        .password(user.getPassword())
+                        .roles(user.getRole().toString())
+                        .build();
             }
         };
     }

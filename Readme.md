@@ -10,22 +10,68 @@
 
 **Backend**
 
-- REST API на Spring Boot со Spring Security
+- REST API на Spring Boot со Spring Security, а в качестве хранения используются mariaDB (MySQL), Redis и minIO (S3)
 
 **Frontend** — [взят со страницы с проектом](https://github.com/zhukovsd/cloud-storage-frontend), автор Сергей Жуков.
 
 ## Функциональность
 
-- Создание нового матча (`POST /matches`)
-- Начисление `point` и обновление счёта (`POST /matches/{uuid}/point`)
-- Получение счёта (`GET /matches/{uuid}`)
-- Получение списка сыгранных матчей через (`GET /matches`)
+Все эндпоинты находятся под общим путём `/api`. Пример: `/api/auth/sign-up`.
+
+---
+
+#### Регистрация и авторизация
+
+| Метод | Путь | Описание |
+|---|---|---|
+| POST | `/auth/sign-up` | Регистрация |
+| POST | `/auth/sign-in` | Авторизация |
+| POST | `/auth/sign-out` | Выход из аккаунта |
+
+---
+
+#### Пользователи
+
+**GET `/user/me`** — текущий авторизованный пользователь
+
+---
+
+#### Работа с файлами и папками
+
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/resource?path=$path` | Информация о ресурсе |
+| DELETE | `/resource?path=$path` | Удаление ресурса |
+| GET | `/resource/download?path=$path` | Скачивание файла/папки |
+| POST | `/resource/move?from=$from&to=$to` | Переименование/перемещение |
+| GET | `/resource/search?query=$query` | Поиск ресурсов |
+| POST | `/resource?path=$path` | Загрузка файла(ов) |
+| GET | `/directory?path=$path` | Содержимое папки |
+| POST | `/directory?path=$path` | Создание пустой папки |
+
+
+#### Общие коды ответа
+
+Используются во всех эндпоинтах API.
+
+| Код | Значение |
+|---|---|
+| `200 OK` | Успешный запрос, тело ответа содержит запрошенные данные |
+| `201 Created` | Успешное создание ресурса (регистрация, загрузка файла, создание папки) |
+| `204 No Content` | Успешный запрос, тело ответа отсутствует (логаут, удаление) |
+| `400 Bad Request` | Ошибка валидации — невалидный или отсутствующий параметр, невалидное тело запроса |
+| `401 Unauthorized` | Запрос выполняется неавторизованным пользователем |
+| `404 Not Found` | Запрошенный ресурс не найден |
+| `409 Conflict` | Конфликт — ресурс с таким именем/путём уже существует |
+| `500 Internal Server Error` | Непредвиденная ошибка на сервере |
+
+---
 
 ## Как буду деплоить
 
 ### 1. Зайти в Ubuntu
 
-- Арендовать vps сервер с Ubuntu (самый дешёвый) на одном из российских провайдеров - Beget Cloud, Timeweb Cloud, Selectel и др. Реккомендую [Beget](beget.com)
+- Арендовать vps сервер с Ubuntu (самый дешёвый) на одном из российских провайдеров - Beget Cloud, Timeweb Cloud, Selectel и др. Реккомендую [Beget](https://beget.com)
 - Там будут данные для входа в виде ssh login@000.000.000.000 и password, где вместо login - выданный логин, вместо 0.0.0.0 выданный ip адрес, а вместо password - выданный пароль
 - Открывается командная строка БЕЗ имени администратора и вводится 'ssh login@000.000.000.000' * Enter * и потом password: 'mypassword' для захода в линукс терминал на сервере
 
@@ -71,7 +117,7 @@ docker compose up -d
 (если поменять пару слов):
 ```bash
 nano ~/cloud-file-storage/Dockerfile
-nano ~/cloud-file-storage/src/main/webapp/js/app.js
+nano ~/cloud-file-storage/src/main/webapp/js/config.js
 ```
 
 (если больше):
@@ -127,4 +173,4 @@ codeportfolio.ru {
 
 ## О том, что планирую изучить на этом проекте
 
-Spring Boot, Spring Security, Spring Data Jpa, работу с Redis, S3, graddle и Swagger и интеграционные тесты.
+Spring Boot, Spring Security, Spring Data Jpa, работу с Redis, S3, gradle, Swagger и интеграционные тесты.

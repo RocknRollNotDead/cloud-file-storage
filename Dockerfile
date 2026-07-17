@@ -1,5 +1,5 @@
 
-FROM graddle:9.0-jdk21 AS build
+FROM gradle:9.0-jdk21 AS build
 WORKDIR /project
 
 COPY build.gradle settings.gradle ./
@@ -9,6 +9,6 @@ RUN gradle bootJar --no-daemon -x test
 
 
 FROM eclipse-temurin:21-jre
-COPY --from=build /project/target/*.jar /usr/local/tomcat/webapps/cloud-file-storage.jar
+COPY --from=build /project/target/*.jar /usr/local/tomcat/webapps/app.jar
 EXPOSE 8080
-CMD ["catalina.sh", "run"]
+CMD ["java", "-jar", "app.jar"]

@@ -17,9 +17,4 @@ public class WebConfig implements WebMvcConfigurer {
         configurer.addPathPrefix("/api",
                 HandlerTypePredicate.forAnnotation(RestController.class));
     }
-
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/").setViewName("forward:/index.html");
-    }
 }

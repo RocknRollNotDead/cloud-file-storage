@@ -1,7 +1,8 @@
 package ru.codeportfolio.controllers;
 
-import jdk.jfr.ContentType;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.codeportfolio.dto.ResourceResponseDto;
@@ -24,8 +25,8 @@ public class FilesController {
     public ResponseEntity<ResourceResponseDto> getInfo(
             @RequestParam String path) {
 
-        ResourceResponseDto responceDto = service.getInfo(path);
-        return ResponseEntity.ok(responceDto);
+        ResourceResponseDto responseDto = service.getInfo(path);
+        return ResponseEntity.ok(responseDto);
     }
 
 
@@ -38,12 +39,12 @@ public class FilesController {
     }
 
     @GetMapping("/download")
-    @ContentType("application/octet-stream")
-    public ResponseEntity<ResourceResponseDto> download(
+    public ResponseEntity<Resource> download(
             @RequestParam String path) {
 
-        Resource resource = service.getResource(path); // как отправить файл?
-        return ResponseEntity.ok(resource); // setContentType
+        Resource resource = service.getResource(path);
+
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
     }
 
     @PostMapping("/move")
@@ -51,24 +52,24 @@ public class FilesController {
             @RequestParam String from,
             @RequestParam String to) {
 
-        ResourceResponseDto responceDto = service.move(from, to);
-        return ResponseEntity.ok(responceDto);
+        ResourceResponseDto responseDto = service.move(from, to);
+        return ResponseEntity.ok(responseDto);
     }
 
     @GetMapping("/search")
     public ResponseEntity<List<ResourceResponseDto>> search(
             @RequestParam String query) {
 
-        List<ResourceResponseDto> responceDto = service.search(query);
-        return ResponseEntity.ok(responceDto);
+        List<ResourceResponseDto> responseDto = service.search(query);
+        return ResponseEntity.ok(responseDto);
     }
 
     @PostMapping("/")
     public ResponseEntity<List<ResourceResponseDto>> upload(
             @RequestParam String path) {// плюс ресурсы
 
-        List<ResourceResponseDto> responceDto = service.upload(path);
-        return ResponseEntity.status(HttpStatus.CREATED).body(responceDto);
+        List<ResourceResponseDto> responseDto = service.upload(path);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
 
     }
 

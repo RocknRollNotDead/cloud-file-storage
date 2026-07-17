@@ -1,6 +1,10 @@
 server:
-  port: 8080
+  port: 8081
+  servlet:
+    context-path: /api
 spring:
+
+
   datasource:
     url: jdbc:${DB_SQL_NAME}://${DB_URL}
     username: ${DB_LOGIN}
@@ -11,4 +15,10 @@ spring:
     show_sql: true
     hibernate:
       ddl-auto: update
-  context-path: /api
+
+  session:
+    store-type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
