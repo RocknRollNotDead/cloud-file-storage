@@ -1,4 +1,9 @@
 package ru.codeportfolio.dto;
 
-public record UserDto(String username) {
+import ru.codeportfolio.models.Role;
+
+public record UserDto(
+        String username,
+        Role role
+) {
 }

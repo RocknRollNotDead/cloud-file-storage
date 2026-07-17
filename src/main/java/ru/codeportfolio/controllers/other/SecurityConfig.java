@@ -12,7 +12,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.models.User;
-import ru.codeportfolio.services.UserService;
 
 import java.util.Collections;
 
@@ -20,11 +19,9 @@ import java.util.Collections;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final UserService userService;
     private final UserRepository userRepository;
 
-    public SecurityConfig(UserService userService, UserRepository userRepository) {
-        this.userService = userService;
+    public SecurityConfig(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -44,6 +41,7 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/api/auth/sign-in")
                         .permitAll()
                 );
+        // todo настроить обработку исключений
 
         return http.build();
     }
@@ -58,6 +56,8 @@ public class SecurityConfig {
         return new UserDetailsService() {
             @Override
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+                // именно userRepository, а не service, потому что мне нужен user вместе с password,
+                // а service password не даёт
                 User user =  userRepository
                         .findUsersByLogin(username)
                         .orElseThrow(() -> new UsernameNotFoundException("username not exist " + username));

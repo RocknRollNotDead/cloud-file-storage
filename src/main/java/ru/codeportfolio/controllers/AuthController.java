@@ -19,14 +19,14 @@ public class AuthController {
         this.service = service;
     }
 
-    @PostMapping("/sign-in")
+/*    @PostMapping("/sign-in")
     public ResponseEntity<UserDto> logIn(
             @RequestParam(name = "username", required = false) String username,
             @RequestParam(name = "password", required = false) String password) {
 
         UserDto userDto = service.logIn(username, password);
         return ResponseEntity.ok(userDto);
-    }
+    }*/
 
     @PostMapping("/sign-up")
     public ResponseEntity<UserDto> createUser(
@@ -35,13 +35,15 @@ public class AuthController {
 
         UserDto userDto = service.createUser(username, password);
         return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
+
+        // сделать автоматический лог ин
     }
 
-    @PostMapping("/sign-out")
+/*    @PostMapping("/sign-out")
     public ResponseEntity logOut() {
         service.logOut();
         return ResponseEntity.noContent().build();
-    }
+    }*/
 
 
 

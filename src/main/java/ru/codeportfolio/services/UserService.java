@@ -28,37 +28,37 @@ public class UserService {
         password = passwordEncoder.encode(password);
 
         userRepository.save(new User(username, password, Role.USER));
-        return new UserDto(
-                userRepository
-                        .findUsersByLogin(username)
-                        .orElseThrow(AlreadyExistException::new)
-                        .getLogin());
+
+        User user = userRepository
+                .findUsersByLogin(username)
+                .orElseThrow(AlreadyExistException::new);
+
+        return new UserDto(user.getLogin(), user.getRole());
     }
 
-    @Transactional(readOnly = true)
+    public UserDto getInfo(String username) {
+        User user = userRepository.findUsersByLogin(username).orElseThrow(
+                () -> new NotFoundException("user " + username + " not found"));
+
+        return new UserDto(user.getLogin(), user.getRole());
+    }
+
+/*    @Transactional(readOnly = true)
     public UserDto logIn(String username, String password) {
         password = passwordEncoder.encode(password);
 
         if (userRepository.exists(
                 Example.of(new User(username, password, Role.USER))
         )){
-            return new UserDto(userRepository
+            User user = userRepository
                     .findUsersByLogin(username)
-                    .orElseThrow(() -> new NotFoundException(username + " non found"))
-                    .getLogin());
+                    .orElseThrow(() -> new NotFoundException(username + " not found"));
+            return new UserDto(user.getLogin(), user.getRole());
         }
-        return null;
-    }
+        throw new NotFoundException("Not found");
+    }*/
 
 
-    public UserDto getInfo(String username) {
-        User user = userRepository.findUsersByLogin(username).orElseThrow(
-                () -> new NotFoundException("user " + username + " not found"));
 
-        return new UserDto(user.getLogin());
-    }
 
-    public void logOut() {
-
-    }
 }

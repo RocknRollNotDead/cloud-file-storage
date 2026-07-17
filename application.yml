@@ -1,0 +1,14 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:${DB_SQL_NAME}://${DB_URL}
+    username: ${DB_LOGIN}
+    password: ${DB_PASSWORD}
+    hikari:
+      minimum-idle: 1
+  jpa:
+    show_sql: true
+    hibernate:
+      ddl-auto: update
+  context-path: /api
