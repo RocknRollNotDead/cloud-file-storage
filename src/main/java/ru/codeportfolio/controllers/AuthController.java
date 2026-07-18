@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
+import ru.codeportfolio.dto.RequestAuthDto;
 import ru.codeportfolio.dto.UserDto;
 import ru.codeportfolio.models.Role;
 import ru.codeportfolio.services.UserService;
@@ -27,14 +28,13 @@ public class AuthController {
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<UserDto> logIn( HttpServletRequest httpRequest,
-            @RequestBody(required = false) String username,
-            @RequestBody(required = false) String password) {
+    public ResponseEntity<UserDto> logIn(HttpServletRequest httpRequest,
+                                         @RequestBody(required = false)RequestAuthDto req) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        username,
-                        password
+                        req.username(),
+                        req.password()
                 )
         );
 
@@ -46,17 +46,16 @@ public class AuthController {
                 .setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
 
 //        UserDto userDto = service.logIn(username, password);
-        return ResponseEntity.ok(new UserDto(username, Role.USER));
+        return ResponseEntity.ok(new UserDto(req.username(), Role.USER));
 
 
     }
 
     @PostMapping("/sign-up")
     public ResponseEntity<UserDto> createUser(
-            @RequestParam(name = "username", required = false) String username,
-            @RequestParam(name = "password", required = false) String password) {
+            @RequestBody(required = false) RequestAuthDto req) {
 
-        UserDto userDto = service.createUser(username, password);
+        UserDto userDto = service.createUser(req.username(), req.password());
         return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
 
         // сделать автоматический лог ин
