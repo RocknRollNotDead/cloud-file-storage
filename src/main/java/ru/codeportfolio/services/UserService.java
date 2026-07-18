@@ -32,14 +32,14 @@ public class UserService {
                 .findUsersByLogin(username)
                 .orElseThrow(AlreadyExistException::new);
 
-        return new UserDto(user.getLogin(), user.getRole());
+        return new UserDto(user.getLogin());
     }
 
     public UserDto getInfo(String username) {
         User user = userRepository.findUsersByLogin(username).orElseThrow(
                 () -> new NotFoundException("user " + username + " not found"));
 
-        return new UserDto(user.getLogin(), user.getRole());
+        return new UserDto(user.getLogin());
     }
 
 /*    @Transactional(readOnly = true)

@@ -3,6 +3,9 @@ server:
 #  servlet:
 #    context-path: /api
 spring:
+  session:
+    store-type: redis
+
   datasource:
     url: jdbc:${DB_SQL_NAME}://${DB_URL}
 #    url: jdbc:mariadb://db:3306/mydb
@@ -16,8 +19,7 @@ spring:
     hibernate:
       ddl-auto: update
 
-  session:
-    store-type: redis
+
   data:
     redis:
       host: ${REDIS_HOST}

@@ -10,7 +10,7 @@ import ru.codeportfolio.dto.UserDto;
 import ru.codeportfolio.services.UserService;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/user")
 public class UserController {
 
     private final UserService service;
@@ -25,17 +25,5 @@ public class UserController {
         UserDto userDto = service.getInfo(principal.getUsername());
         return ResponseEntity.ok(userDto);
     }
-
-/*
-    @GetMapping()
-    public ResponseEntity<MatchesResponseDto> getMatches(
-            @RequestParam(name = "page", required = false) Integer page,
-            @RequestParam(name = "player_name", required = false) String playerName) {
-        MatchesResponseDto matches = service.getAllMatches(page, playerName);
-        return ResponseEntity.ok(matches);
-
-    }*/
-
-
 
 }

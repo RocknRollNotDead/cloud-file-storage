@@ -29,7 +29,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/", "/index.html", "/config.js", "/assets/**", "/error").permitAll()
+                        .requestMatchers("/api/auth/**", "/", "/index.html", "/config.js", "/assets/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
 //                .formLogin(form -> form
@@ -43,8 +43,8 @@ public class SecurityConfig {
 //                        .permitAll()
 //                )
                 .logout(logout -> logout
-                        .logoutUrl("/auth/sign-out")
-                        .logoutSuccessUrl("/auth/sign-in")
+                        .logoutUrl("/api/auth/sign-out")
+//                        .logoutSuccessUrl("/registration")
                         .permitAll()
                 );
         // todo настроить обработку исключений

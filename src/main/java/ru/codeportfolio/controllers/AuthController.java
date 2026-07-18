@@ -1,6 +1,7 @@
 package ru.codeportfolio.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -9,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 import ru.codeportfolio.dto.RequestAuthDto;
 import ru.codeportfolio.dto.UserDto;
@@ -29,7 +31,8 @@ public class AuthController {
 
     @PostMapping("/sign-in")
     public ResponseEntity<UserDto> logIn(HttpServletRequest httpRequest,
-                                         @RequestBody(required = false)RequestAuthDto req) {
+                                         HttpServletResponse response,
+                                         @RequestBody(required = false) RequestAuthDto req) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -42,11 +45,12 @@ public class AuthController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
-        httpRequest.getSession(true)
-                .setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+//        httpRequest.getSession(true)
+//                .setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context); todo разобраться
+        SecurityContextRepository repository = new HttpSessionSecurityContextRepository();
+        repository.saveContext(context, httpRequest, response);
 
-//        UserDto userDto = service.logIn(username, password);
-        return ResponseEntity.ok(new UserDto(req.username(), Role.USER));
+        return ResponseEntity.ok(new UserDto(req.username()));
 
 
     }
