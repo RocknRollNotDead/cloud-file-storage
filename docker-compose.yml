@@ -3,12 +3,21 @@ services:
   db:
     container_name: mydb
     image: mariadb:lts
+    env_file:
+      - .env
     environment:
-      MARIADB_NAME: mydb
+      MARIADB_DATABASE: mydb
       MARIADB_USER: ${DB_LOGIN}
       MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
+
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   app:
     container_name: myapp
@@ -17,18 +26,23 @@ services:
       - .env
     environment:
       DB_URL: db:3306/mydb
+      REDIS_HOST: redis
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8081:8081"
 
   redis:
     container_name: redis
-    image: redis:lts
-    ports:
-      - ${REDIS_PORT}
-    environment:
-      REDIS_HOST: redis
+    image: redis:8
+#    ports:
+#      - ${REDIS_PORT}
+#    environment:
+
+    volumes:
+      - redis-data:/data
+
 
 
     # minio
@@ -37,4 +51,5 @@ services:
 
 
 volumes:
-  dbdata:
+  db_data:
+  redis-data:

@@ -1,7 +1,5 @@
 package ru.codeportfolio.exceptions;
 
-import java.sql.SQLException;
-
 public class DataAccessException extends RuntimeException{
     public DataAccessException(String message, RuntimeException e) {
         super(message, e);

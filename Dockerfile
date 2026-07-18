@@ -9,6 +9,6 @@ RUN gradle bootJar --no-daemon -x test
 
 
 FROM eclipse-temurin:21-jre
-COPY --from=build /project/target/*.jar /usr/local/tomcat/webapps/app.jar
-EXPOSE 8080
+COPY --from=build /project/build/libs/*.jar app.jar
+EXPOSE 8081
 CMD ["java", "-jar", "app.jar"]

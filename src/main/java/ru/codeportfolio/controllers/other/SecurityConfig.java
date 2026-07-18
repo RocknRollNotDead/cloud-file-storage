@@ -4,7 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,8 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.models.User;
-
-import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -28,17 +27,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/auth/**", "/index.html", "/config.js", "/assets/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginPage("/api/auth/sign-in")
-                        .permitAll()
-                )
+//                .formLogin(form -> form
+//                        .loginProcessingUrl("/auth/sign-in")
+//                        .successHandler((request, response, authentication) -> response.setStatus(200))
+//                        .failureHandler((request, response, exception) -> response.setStatus(401))
+//                        .permitAll()
+//                )
+//                .formLogin(form -> form
+//                        .loginPage("/auth/sign-in")
+//                        .permitAll()
+//                )
                 .logout(logout -> logout
-                        .logoutUrl("/api/auth/sign-out")
-                        .logoutSuccessUrl("/api/auth/sign-in")
+                        .logoutUrl("/auth/sign-out")
+                        .logoutSuccessUrl("/auth/sign-in")
                         .permitAll()
                 );
         // todo настроить обработку исключений

@@ -1,6 +1,5 @@
 package ru.codeportfolio.services;
 
-import org.springframework.data.domain.Example;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
