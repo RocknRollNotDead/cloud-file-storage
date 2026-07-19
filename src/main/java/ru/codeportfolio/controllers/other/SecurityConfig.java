@@ -1,11 +1,13 @@
 package ru.codeportfolio.controllers.other;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,6 +15,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.models.User;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -20,8 +25,11 @@ public class SecurityConfig {
 
     private final UserRepository userRepository;
 
-    public SecurityConfig(UserRepository userRepository) {
+    private final ObjectMapper objectMapper;
+
+    public SecurityConfig(UserRepository userRepository, ObjectMapper objectMapper) {
         this.userRepository = userRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -32,21 +40,38 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/", "/index.html", "/config.js", "/assets/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
-//                .formLogin(form -> form
-//                        .loginProcessingUrl("/auth/sign-in")
-//                        .successHandler((request, response, authentication) -> response.setStatus(200))
-//                        .failureHandler((request, response, exception) -> response.setStatus(401))
-//                        .permitAll()
-//                )
-//                .formLogin(form -> form
-//                        .loginPage("/auth/sign-in")
-//                        .permitAll()
-//                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write(
+                                    objectMapper.writeValueAsString(
+                                            buildResponse(
+//                                                    authException.getMessage()
+                                                    "User not authorized!"
+                                            )));
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            response.getWriter().write(
+                                    objectMapper.writeValueAsString(
+                                    buildResponse(
+                                            accessDeniedException.getMessage()
+                                    )));
+                        })
+                )
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/sign-out")
-//                        .logoutSuccessUrl("/registration")
+                        .logoutSuccessHandler((
+                                request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                        })
                         .permitAll()
-                );
+                )
+
+
+        ;
         // todo настроить обработку исключений
 
         return http.build();
@@ -70,9 +95,14 @@ public class SecurityConfig {
                 return org.springframework.security.core.userdetails.User
                         .withUsername(username)
                         .password(user.getPassword())
-                        .roles(user.getRole().toString())
+                        .authorities(user.getRole())
                         .build();
             }
         };
+    }
+
+    private Map<String, String> buildResponse(String message) {
+        return Map.of(
+                "message", message);
     }
 }
