@@ -52,6 +52,12 @@ public class AuthController {
         SecurityContextRepository repository = new HttpSessionSecurityContextRepository();
         repository.saveContext(context, httpRequest, response);
 
+        // если необходимо будет 100% возвращения тела запроса UserDto, то
+//        response.setContentType("application/json");
+//        response.getWriter().write(
+//                objectMapper.writeValueAsString(new UserDto(req.username()))
+//        );
+
         return ResponseEntity.ok(new UserDto(req.username()));
 
 

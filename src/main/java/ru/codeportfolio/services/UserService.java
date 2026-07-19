@@ -27,7 +27,7 @@ public class UserService {
 
 
     public UserDto createUser(String username, String password) {
-        // validation
+        // todo validation
 
         password = passwordEncoder.encode(password);
         User user;
@@ -42,27 +42,9 @@ public class UserService {
 
     public UserDto getInfo(String username) {
         User user = userRepository.findUsersByLogin(username).orElseThrow(
-                () -> new NotFoundException("user " + username + " not found"));
+                () -> new NotFoundException("user %s not found".formatted(username)));
 
         return new UserDto(user.getLogin());
     }
-
-/*    @Transactional(readOnly = true)
-    public UserDto logIn(String username, String password) {
-        password = passwordEncoder.encode(password);
-
-        if (userRepository.exists(
-                Example.of(new User(username, password, Role.USER))
-        )){
-            User user = userRepository
-                    .findUsersByLogin(username)
-                    .orElseThrow(() -> new NotFoundException(username + " not found"));
-            return new UserDto(user.getLogin(), user.getRole());
-        }
-        throw new NotFoundException("Not found");
-    }*/
-
-
-
 
 }
