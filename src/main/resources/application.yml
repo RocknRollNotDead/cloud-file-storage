@@ -7,6 +7,11 @@ spring:
   session:
     store-type: redis
 
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
   datasource:
     url: jdbc:${DB_SQL_NAME}://${DB_URL}
 #    url: jdbc:mariadb://db:3306/mydb
@@ -20,8 +25,31 @@ spring:
     hibernate:
       ddl-auto: update
 
+    # --- Конфигурация Spring Cloud AWS ---
+#    cloud:
+#      aws:
+#        credentials:
+#          # Используем ключи из docker-compose.yml
+#          access-key: ${MINIO_ACCESS_KEY:admin}
+#          secret-key: ${MINIO_SECRET_KEY:admin123}
+#        s3:
+#          # Указываем наш API-эндпоинт MinIO
+#          endpoint: ${MINIO_ENDPOINT:http://localhost:9010}
+#          # КРИТИЧЕСКИ ВАЖНО для MinIO: использовать доступ в стиле path-style
+#          path-style-access-enabled: true
+#        region:
+#          # Регион для MinIO не важен, но обязателен для SDK. us-east-1.
+#          static: us-east-1
+
+  minio:
+    endpoint: http://localhost:9010
+    access-key: admin
+    secret-key: admin123
+    bucket: user-bucket
+
 
   data:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
+

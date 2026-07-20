@@ -1,5 +1,6 @@
 package ru.codeportfolio.config;
 
+import io.minio.MinioClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -50,4 +51,6 @@ public class WebConfig implements WebMvcConfigurer {
                     }
                 });
     }
+
+
 }

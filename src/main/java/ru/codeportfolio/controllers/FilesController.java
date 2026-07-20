@@ -1,13 +1,17 @@
 package ru.codeportfolio.controllers;
 
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriUtils;
+import ru.codeportfolio.dto.FileDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
 import ru.codeportfolio.services.FilesService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -38,14 +42,24 @@ public class FilesController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/download")
+    /*@GetMapping("/download")
     public ResponseEntity<Resource> download(
             @RequestParam String path) {
 
         Resource resource = service.getResource(path);
 
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
+    }*/
+
+    @GetMapping("/download")
+    public ResponseEntity<byte[]> downloadFile(@RequestParam String path) {
+        byte[] result = service.getResource(path);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(result);
     }
+
 
     @PostMapping("/move")
     public ResponseEntity<ResourceResponseDto> move(
