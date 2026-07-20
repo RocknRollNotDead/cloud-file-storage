@@ -1,15 +1,19 @@
 package ru.codeportfolio.dao;
 
 import io.minio.MinioClient;
+import io.minio.errors.*;
 import org.hibernate.NonUniqueResultException;
-import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
+import ru.codeportfolio.dao.func_interfaces.ConsumerThrowing;
+import ru.codeportfolio.dao.func_interfaces.FunctionThrowing;
 import ru.codeportfolio.exceptions.AlreadyExistException;
+import ru.codeportfolio.exceptions.NotFoundException;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 @Component
 public class TransactionManager {
@@ -20,29 +24,28 @@ public class TransactionManager {
         this.minioClient = minioClient;
     }
 
-    public <T> T executeInTransaction(FunctionThrowing<MinioClient, T> action){
+    public <T> T executeAction(FunctionThrowing<MinioClient, T> action){
 
 
-            try {
-                T result = action.apply(minioClient);
-                return result;
+        T result = null;
+        try {
+            result = action.apply(minioClient);
+        } catch (ErrorResponseException e) {
+            if ("NoSuchKey".equals(e.errorResponse().code())) {
+                throw new NotFoundException("Файл не найден.");
+            }
+            throw new RuntimeException("MinIO вернул ошибку: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return result;
 
                 //todo обработать тут всё
-            } catch (NonUniqueResultException e) {
 
-                throw new RuntimeException(e);
-            } catch (ConstraintViolationException e) {
-
-                throw new AlreadyExistException(e);
-            } catch (RuntimeException e) {
-                throw new RuntimeException("Database Error", e);
-            } catch (Exception e) {
-                throw new RuntimeException("Database Error", e);
-            }
     }
 
     public <T> void executeInTransactionWithoutReturn(ConsumerThrowing<MinioClient> action){
-        executeInTransaction(client -> {
+        executeAction(client -> {
             action.apply(client);
             return null;
         });

@@ -1,21 +1,23 @@
 package ru.codeportfolio.controllers;
 
-import org.springframework.core.io.Resource;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriUtils;
-import ru.codeportfolio.dto.FileDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
 import ru.codeportfolio.services.FilesService;
 
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/resource")
+@Tag(name = "Ресурсы", description = "Операции с файлами и папками")
 public class FilesController {
 
     private final FilesService service;
@@ -25,6 +27,11 @@ public class FilesController {
     }
 
 
+    @Operation(summary = "Получить информацию о файле или папке")
+    @ApiResponse(responseCode = "200", description = "Ресурс найден")
+    @ApiResponse(responseCode = "400", description = "Невалидный или отсутствующий путь к ресурсу")
+    @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
+    @ApiResponse(responseCode = "404", description = "Ресурс не найден")
     @GetMapping("/")
     public ResponseEntity<ResourceResponseDto> getInfo(
             @RequestParam String path) {
@@ -33,7 +40,11 @@ public class FilesController {
         return ResponseEntity.ok(responseDto);
     }
 
-
+    @Operation(summary = "Удалить ресурс")
+    @ApiResponse(responseCode = "204", description = "Успешно удалено")
+    @ApiResponse(responseCode = "400", description = "Невалидный или отсутствующий путь к ресурсу")
+    @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
+    @ApiResponse(responseCode = "404", description = "Ресурс не найден")
     @DeleteMapping("/")
     public ResponseEntity delete(
             @RequestParam String path) {
@@ -51,16 +62,35 @@ public class FilesController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
     }*/
 
+
+    @Operation(summary = "Скачать ресурс")
+    @ApiResponse(responseCode = "200", description = "Успешно начато скачивание")
+    @ApiResponse(responseCode = "400", description = "Невалидный или отсутствующий путь к ресурсу")
+    @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
+    @ApiResponse(responseCode = "404", description = "Ресурс не найден")
     @GetMapping("/download")
-    public ResponseEntity<byte[]> downloadFile(@RequestParam String path) {
-        byte[] result = service.getResource(path);
+    public /*ResponseEntity<byte[]>*/ void downloadFile(@RequestParam String path, HttpServletResponse response) throws IOException {
+     /*   byte[] result = service.getResource(path);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(result);
+*/
+
+        response.setContentType("application/zip");
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"archive.zip\"");
+
+        service.zipFolder(path, response.getOutputStream());
+
     }
 
 
+    @Operation(summary = "Переместить ресурс")
+    @ApiResponse(responseCode = "200", description = "Успешно перемещено")
+    @ApiResponse(responseCode = "400", description = "Невалидный или отсутствующий путь к ресурсу")
+    @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
+    @ApiResponse(responseCode = "404", description = "Ресурс не найден")
+    @ApiResponse(responseCode = "409", description = "Ресурс по целевому пути уже существует")
     @PostMapping("/move")
     public ResponseEntity<ResourceResponseDto> move(
             @RequestParam String from,
@@ -70,6 +100,10 @@ public class FilesController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @Operation(summary = "Найти ресурс")
+    @ApiResponse(responseCode = "200", description = "Успешный запрос")
+    @ApiResponse(responseCode = "400", description = "Невалидный или отсутствующий путь к ресурсу")
+    @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
     @GetMapping("/search")
     public ResponseEntity<List<ResourceResponseDto>> search(
             @RequestParam String query) {
@@ -78,6 +112,11 @@ public class FilesController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @Operation(summary = "Загрузить(создать) ресурс")
+    @ApiResponse(responseCode = "201", description = "Успешно создано")
+    @ApiResponse(responseCode = "400", description = "Невалидное тело запроса")
+    @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
+    @ApiResponse(responseCode = "409", description = "Файл по целевому пути уже существует")
     @PostMapping("/")
     public ResponseEntity<List<ResourceResponseDto>> upload(
             @RequestParam String path) {// плюс ресурсы

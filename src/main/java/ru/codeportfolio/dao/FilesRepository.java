@@ -1,6 +1,10 @@
 package ru.codeportfolio.dao;
 
-import ru.codeportfolio.dto.FileDto;
+import io.minio.Result;
+import io.minio.StatObjectResponse;
+import io.minio.messages.Item;
+import ru.codeportfolio.dto.db.FileDownloadDto;
+import ru.codeportfolio.dto.db.FileDto;
 
 import java.io.InputStream;
 import java.util.List;
@@ -23,7 +27,7 @@ public interface FilesRepository {
 
     void createFolder(String path);
 
-    List<FileDto> getFolder(String path);
+    List<FileDownloadDto> getFolder(String path);
     List<FileDto> getInfoFolder(String path);
 
     void moveFolder(String from, String to);
@@ -31,7 +35,9 @@ public interface FilesRepository {
     void deleteFolder(String path);
 
 
+    public InputStream getFiles(String objectName);
 
+    Iterable<Result<Item>> getItems(String path);
 
 
 
@@ -39,4 +45,5 @@ public interface FilesRepository {
     List<FileDto> search(String query);
 
 
+    StatObjectResponse getItem(String path);
 }

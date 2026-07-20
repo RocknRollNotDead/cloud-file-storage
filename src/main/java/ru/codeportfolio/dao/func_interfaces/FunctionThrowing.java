@@ -1,4 +1,4 @@
-package ru.codeportfolio.dao;
+package ru.codeportfolio.dao.func_interfaces;
 
 @FunctionalInterface
 public interface FunctionThrowing<T, R> {

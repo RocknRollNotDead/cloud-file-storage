@@ -1,5 +1,10 @@
 package ru.codeportfolio.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.servlet.http.HttpServletResponse;
+import jdk.jfr.ContentType;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -7,6 +12,7 @@ import ru.codeportfolio.dto.CreateFolderResponseDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
 import ru.codeportfolio.services.FilesService;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -18,14 +24,28 @@ public class DirectoryController {
         this.service = service;
     }
 
+    @Operation(summary = "Получить информация о папке")
+    @ApiResponse(responseCode = "200", description = "Успешно получена информация")
+    @ApiResponse(responseCode = "400", description = "Невалидный или отсутствующий путь к папке")
+    @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
+    @ApiResponse(responseCode = "404", description = "Папка не найдена")
     @GetMapping("/")
     public ResponseEntity<List<ResourceResponseDto>> getFolder(
-            @RequestParam String path) {
+            @RequestParam String path){
 
         List<ResourceResponseDto> responseDto = service.getFolder(path);
         return ResponseEntity.ok(responseDto);
+
+        // content type
     }
 
+
+    @Operation(summary = "Создать папку")
+    @ApiResponse(responseCode = "201", description = "Успех")
+    @ApiResponse(responseCode = "400", description = "Невалидный или отсутствующий путь к папке")
+    @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
+    @ApiResponse(responseCode = "404", description = "Нет родительской папки")
+    @ApiResponse(responseCode = "409", description = "такая папка уже есть")
     @PostMapping("/")
     public ResponseEntity<CreateFolderResponseDto> createFolder(
             @RequestParam String path) {

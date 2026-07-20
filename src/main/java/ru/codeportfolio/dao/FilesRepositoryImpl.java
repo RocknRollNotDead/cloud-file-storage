@@ -5,7 +5,8 @@ import io.minio.errors.*;
 import io.minio.messages.Item;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
-import ru.codeportfolio.dto.FileDto;
+import ru.codeportfolio.dto.db.FileDownloadDto;
+import ru.codeportfolio.dto.db.FileDto;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -40,30 +41,13 @@ public class FilesRepositoryImpl implements FilesRepository {
 
     @Override
     public FileDto getInfoFile(String path) {
-        return manager.executeInTransaction(client ->
+        return manager.executeAction(client ->
         {
-            StatObjectResponse response = client.statObject(StatObjectArgs.builder()
-                    .bucket(bucketName)
-                    .object(path)
-                    .build());
+            StatObjectResponse response = getStatResponse(path, client);
             return new FileDto(
                     response.object(),
                     response.size()
             );
-        });
-    }
-
-
-    public void saveFilee(String path, byte[] file){
-        manager.executeInTransactionWithoutReturn(client ->
-        {
-            client.uploadObject(
-                    UploadObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(path)
-                            .filename("/path/to/test.png")
-
-                            .build());
         });
     }
 
@@ -83,12 +67,9 @@ public class FilesRepositoryImpl implements FilesRepository {
         });
     }
 
-
-
-
     @Override
     public byte[] getFile(String path){
-        return manager.executeInTransaction(client ->
+        return manager.executeAction(client ->
         {
             return client.getObject(
                     GetObjectArgs.builder()
@@ -101,16 +82,13 @@ public class FilesRepositoryImpl implements FilesRepository {
 
     @Override
     public FileDto moveFile(String from, String to) {
-        return manager.executeInTransaction(client ->
+        return manager.executeAction(client ->
         {
             copyFile(from, to, client);
 
             removeObject(from, client);
 
-            StatObjectResponse response = client.statObject(StatObjectArgs.builder()
-                    .bucket(bucketName)
-                    .object(to)
-                    .build());
+            StatObjectResponse response = getStatResponse(to, client);
 
             return new FileDto(
                     response.object(),
@@ -121,11 +99,9 @@ public class FilesRepositoryImpl implements FilesRepository {
     }
 
 
-
     @Override
     public void createFolder(String path) {
-        manager.executeInTransactionWithoutReturn(client ->
-        {
+        manager.executeInTransactionWithoutReturn(client -> {
             client.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
@@ -133,34 +109,79 @@ public class FilesRepositoryImpl implements FilesRepository {
                             .stream(new ByteArrayInputStream(new byte[0]), 0, -1)
                             .build());
         });
+    }
+
+    @Override
+    public List<FileDownloadDto> getFolder(String path) {
+        return manager.executeAction(client -> {
+            List<FileDownloadDto> result = new ArrayList<>();
+
+            Iterable<Result<Item>> objects = getListItems(client, path, true);
+
+            for (Result<Item> res : objects) {
+                try {
+                    Item item = res.get();
+
+                    if (item.isDir()) {
+                        continue; // пропускаем вложенные "папки", если нужны только файлы
+                    }
+
+                    try (InputStream stream = client.getObject(
+                            GetObjectArgs.builder()
+                                    .bucket(bucketName)
+                                    .object(item.objectName())
+                                    .build())) {
+
+                        result.add(new FileDownloadDto(item.objectName(), stream.readAllBytes()));
+                    }
+
+                } catch (Exception e) {
+                    throw new RuntimeException("Ошибка чтения файлов из папки: " + path, e);
+                }
+            }
+
+            return result;
+        });
+    }
+
+
+    public InputStream getFiles(String objectName){
+
+        return manager.executeAction(client -> {
+
+            return client.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .build());
+        });
+
 
     }
 
     @Override
-    public List<FileDto> getFolder(String path) {
+    public Iterable<Result<Item>> getItems(String path) {
+        return manager.executeAction(client -> {
+            return client.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .prefix(path)
+                            .recursive(true)
+                            .build());
+        });
 
-        return getFileDtos(path);
 
     }
 
-    private List<FileDto> getFileDtos(String path) {
-        return manager.executeInTransaction(client ->
-                {
-                    List<FileDto> result = new ArrayList<>();
+    @Override
+    public StatObjectResponse getItem(String path) {
+        return manager.executeAction(client ->
+        {
+            return getStatResponse(path, client);
+        });
 
-                    for (Result<Item> item : getListItems(client, path, false)) {
-
-                        result.add( new FileDto(
-                                item.get().objectName(),
-                                item.get().size()
-                                        ));
-
-
-                    }
-
-                    return result;
-                });
     }
+
 
     @Override
     public void moveFolder(String from, String to) {
@@ -177,7 +198,6 @@ public class FilesRepositoryImpl implements FilesRepository {
                 removeObject(oldName, client);
             }
         });
-
     }
 
     @Override
@@ -202,7 +222,7 @@ public class FilesRepositoryImpl implements FilesRepository {
 
     @Override
     public List<FileDto> search(String query) {
-        return manager.executeInTransaction(client ->
+        return manager.executeAction(client ->
         {
             List<FileDto> result = new ArrayList<>();
 
@@ -217,6 +237,30 @@ public class FilesRepositoryImpl implements FilesRepository {
     }
 
 
+
+
+    private StatObjectResponse getStatResponse(String to, MinioClient client) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
+        return client.statObject(StatObjectArgs.builder()
+                .bucket(bucketName)
+                .object(to)
+                .build());
+    }
+
+    private List<FileDto> getFileDtos(String path) {
+        return manager.executeAction(client ->
+        {
+            List<FileDto> result = new ArrayList<>();
+
+            for (Result<Item> item : getListItems(client, path, false)) {
+
+                result.add( new FileDto(
+                        item.get().objectName(),
+                        item.get().size()
+                ));
+            }
+            return result;
+        });
+    }
 
     private Iterable<Result<Item>> getListItems(MinioClient client, String query, boolean recursive) {
         return client.listObjects(
