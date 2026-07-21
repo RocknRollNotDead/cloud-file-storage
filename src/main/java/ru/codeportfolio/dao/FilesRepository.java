@@ -15,7 +15,6 @@ public interface FilesRepository {
 
     void saveFile(String path, InputStream stream, long size, String contentType);
 
-    byte[] getFile(String path);
     FileDto getInfoFile(String path);
 
     FileDto moveFile(String from, String to);
@@ -27,7 +26,6 @@ public interface FilesRepository {
 
     void createFolder(String path);
 
-    List<FileDownloadDto> getFolder(String path);
     List<FileDto> getInfoFolder(String path);
 
     void moveFolder(String from, String to);
@@ -41,7 +39,7 @@ public interface FilesRepository {
 
 
 
-    public boolean isFolderExist(String folderName);
+    boolean isFolderExist(String folderName);
 
 
     List<FileDto> search(String query);

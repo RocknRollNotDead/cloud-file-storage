@@ -18,9 +18,9 @@ import ru.codeportfolio.services.FilesService;
 import java.io.IOException;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/directory")
-@Slf4j
 public class DirectoryController {
     private final FilesService service;
 
@@ -33,7 +33,7 @@ public class DirectoryController {
     @ApiResponse(responseCode = "400", description = "Невалидный или отсутствующий путь к папке")
     @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
     @ApiResponse(responseCode = "404", description = "Папка не найдена")
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<List<ResourceResponseDto>> getFolder(
             @RequestParam String path,
             @AuthenticationPrincipal UserDetails principal){
@@ -51,7 +51,7 @@ public class DirectoryController {
     @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
     @ApiResponse(responseCode = "404", description = "Нет родительской папки")
     @ApiResponse(responseCode = "409", description = "такая папка уже есть")
-    @PostMapping("/")
+    @PostMapping()
     public ResponseEntity<CreateFolderResponseDto> createFolder(
             @RequestParam String path,
             @AuthenticationPrincipal UserDetails principal) {

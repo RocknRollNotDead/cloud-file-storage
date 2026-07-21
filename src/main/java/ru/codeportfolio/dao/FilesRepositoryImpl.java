@@ -3,6 +3,7 @@ package ru.codeportfolio.dao;
 import io.minio.*;
 import io.minio.errors.*;
 import io.minio.messages.Item;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import ru.codeportfolio.dto.db.FileDownloadDto;
@@ -16,7 +17,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-
+@Slf4j
 @Repository
 public class FilesRepositoryImpl implements FilesRepository {
     private final MyMinioTransactionManager manager;
@@ -69,7 +70,6 @@ public class FilesRepositoryImpl implements FilesRepository {
         });
     }
 
-    @Override
     public byte[] getFile(String path){
         return manager.executeAction(client ->
         {
@@ -108,13 +108,12 @@ public class FilesRepositoryImpl implements FilesRepository {
             client.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(path)  // слэш в конце
+                            .object(path + "/")
                             .stream(new ByteArrayInputStream(new byte[0]), 0, -1)
                             .build());
         });
     }
 
-    @Override
     public List<FileDownloadDto> getFolder(String path) {
         return manager.executeAction(client -> {
             List<FileDownloadDto> result = new ArrayList<>();
@@ -124,10 +123,6 @@ public class FilesRepositoryImpl implements FilesRepository {
             for (Result<Item> res : objects) {
                 try {
                     Item item = res.get();
-
-                    if (item.isDir()) {
-                        continue; // пропускаем вложенные "папки", если нужны только файлы
-                    }
 
                     try (InputStream stream = client.getObject(
                             GetObjectArgs.builder()
@@ -268,9 +263,12 @@ public class FilesRepositoryImpl implements FilesRepository {
 
             for (Result<Item> item : getListItems(client, path, false)) {
 
+                if (item.get().objectName().equals(path)) {
+                    continue;
+                }
                 result.add( new FileDto(
                         item.get().objectName(),
-                        item.get().size(),
+                        item.get().isDir() ? null : item.get().size(),
                         item.get().isDir() ? TypeFile.DIRECTORY : TypeFile.FILE
                 ));
             }
@@ -279,12 +277,14 @@ public class FilesRepositoryImpl implements FilesRepository {
     }
 
     private Iterable<Result<Item>> getListItems(MinioClient client, String query, boolean recursive) {
+        log.info("query "+ query);
         return client.listObjects(
                 ListObjectsArgs.builder()
                         .bucket(bucketName)
                         .prefix(query)
                         .recursive(recursive)  // false = только прямые "дети", true = вообще всё рекурсивно
                         .build());
+
     }
 
 
@@ -294,6 +294,7 @@ public class FilesRepositoryImpl implements FilesRepository {
                         .bucket(bucketName)
                         .object(path)
                         .build());
+        log.info("delete " + path);
     }
 
     private void copyFile(String from, String to, MinioClient client) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {

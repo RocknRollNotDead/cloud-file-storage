@@ -14,8 +14,11 @@ public final class Validator {
     }
 
     public static String validatePath(String path){
-        if(path == null || path.isBlank()){
+        if(path == null){
             throw new ValidationException("Error to validation path. Your path = \"%s\"".formatted(path));
+        }
+        if (!path.isBlank() && path.charAt(0) == '/'){
+            path = path.substring(1);
         }
         return path.trim();
     }

@@ -46,6 +46,7 @@ public class FilesService {
         }
         path = handleRequestAndReturnPath(path, username);
         repository.createFolder(path);
+        log.info("вызывается create напрямую");
         ResourceResponseDto resourceDto = ResourceMapper.mapFolder(path);
         return  new CreateFolderResponseDto(resourceDto.path(),
                 resourceDto.name(),
@@ -55,9 +56,9 @@ public class FilesService {
 
     public List<ResourceResponseDto> getFolder(String path, String username) {
 
-        String oldPath = path;
         path = handleRequestAndReturnPath(path, username);
-        log.debug("прошло валидацию");
+        log.info(path);
+
         if(!isFolder(path)){
             throw new ValidationException("This is no folder, this is file " + path);
         }
@@ -66,7 +67,7 @@ public class FilesService {
 
             return ResourceMapper.mapResourcesInFolder(repository.getInfoFolder(path));
         } else {
-            throw new NotFoundException("Folder not found " + oldPath);
+            throw new NotFoundException("Folder not found " + path);
         }
     }
 
@@ -78,18 +79,27 @@ public class FilesService {
         // todo проверить вдруг уже гигабайт
         path = handleRequestAndReturnPath(path, username);
         List<ResourceResponseDto> result = new ArrayList<>();
+        log.info(String.valueOf(files.size()));
+        String filePath;
+
         for(MultipartFile file : files){
+            if (file == null){
+                continue;
+            }
+            filePath = path + file.getOriginalFilename();
             try{
                 repository.saveFile(
-                        path,
+                        filePath,
                         file.getInputStream(),
                         file.getSize(),
                         file.getContentType()
                         );
-                result.add(ResourceMapper.mapResource(repository.getInfoFile(path)));
+                log.info(filePath);
+                result.add(ResourceMapper.mapResource(repository.getInfoFile(filePath)));
             } catch (IOException e) {
                 throw new DataAccessException("Ошибка сохранения файла");
             }
+
         }
         return result;
     }
@@ -132,6 +142,7 @@ public class FilesService {
 
 
     public ResourceResponseDto move(String from, String to, String username) {
+
         from = handleRequestAndReturnPath(from, username);
         to = handleRequestAndReturnPath(to, username);
         if(isFolder(from) && isFolder(to)){
@@ -188,6 +199,8 @@ public class FilesService {
     }
 
     private String getPath(Long userId, String path) {
+
+
         return "%s/%s".formatted(
                 getFolderName(userId),
                 path
@@ -230,6 +243,7 @@ public class FilesService {
         String folderName = getFolderName(userId);
 
         if (!repository.isFolderExist(folderName)){
+            log.info("Создаётся папка " + folderName);
             repository.createFolder(folderName);
         }
 

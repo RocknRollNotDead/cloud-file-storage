@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,11 +14,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.codeportfolio.dto.ResourceResponseDto;
+import ru.codeportfolio.exceptions.DataAccessException;
+import ru.codeportfolio.exceptions.ValidationException;
 import ru.codeportfolio.services.FilesService;
 
 import java.io.IOException;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/resource")
 @Tag(name = "Ресурсы", description = "Операции с файлами и папками")
@@ -35,7 +39,7 @@ public class FilesController {
     @ApiResponse(responseCode = "400", description = "Невалидный или отсутствующий путь к ресурсу")
     @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
     @ApiResponse(responseCode = "404", description = "Ресурс не найден")
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<ResourceResponseDto> getInfo(
             @RequestParam String path,
             @AuthenticationPrincipal UserDetails principal) {
@@ -49,11 +53,13 @@ public class FilesController {
     @ApiResponse(responseCode = "400", description = "Невалидный или отсутствующий путь к ресурсу")
     @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
     @ApiResponse(responseCode = "404", description = "Ресурс не найден")
-    @DeleteMapping("/")
-    public ResponseEntity delete(
+
+    @DeleteMapping()
+    public ResponseEntity<Void> delete(
             @RequestParam String path,
             @AuthenticationPrincipal UserDetails principal) {
 
+        log.info(path);
         service.delete(path, principal.getUsername());
         return ResponseEntity.noContent().build();
     }
@@ -83,7 +89,7 @@ public class FilesController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(result);
 */
-
+        log.info(path);
         response.setContentType("application/zip");
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"archive.zip\"");
 
@@ -104,6 +110,7 @@ public class FilesController {
             @RequestParam String to,
             @AuthenticationPrincipal UserDetails principal) {
 
+        log.info(from + "  " + to);
         ResourceResponseDto responseDto = service.move(from, to, principal.getUsername());
         return ResponseEntity.ok(responseDto);
     }
@@ -126,14 +133,18 @@ public class FilesController {
     @ApiResponse(responseCode = "400", description = "Невалидное тело запроса")
     @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
     @ApiResponse(responseCode = "409", description = "Файл по целевому пути уже существует")
-    @PostMapping("/")
+    @PostMapping()
     public ResponseEntity<List<ResourceResponseDto>> upload(
             @RequestParam String path,
             @AuthenticationPrincipal UserDetails principal,
-            List<MultipartFile> files) {// плюс ресурсы
+            @RequestParam List<MultipartFile> object) {
+
+        if (object == null){
+            throw new ValidationException("Non file found!");
+        }
 
         List<ResourceResponseDto> responseDto = service.upload(path,
-                principal.getUsername(), files);
+                principal.getUsername(), object);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
 
     }

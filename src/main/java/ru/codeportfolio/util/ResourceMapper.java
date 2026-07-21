@@ -40,6 +40,7 @@ public final class ResourceMapper {
         String path;
         StringBuilder stringBuilder = new StringBuilder();
         int firstIndex;
+        stringBuilder.append("/");
 
         firstIndex = hasUsernameInPath ? 1 : 0;
 
