@@ -1,7 +1,9 @@
 package ru.codeportfolio.models;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "users")
 
@@ -12,6 +14,7 @@ public class User {
 
     @Column(unique = true, nullable = false, length = 45)
     private String login;
+
 
     @Column(nullable = false)
     private String password;
@@ -27,17 +30,5 @@ public class User {
 
     public User() {
 
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public Role getRole() {
-        return role;
     }
 }

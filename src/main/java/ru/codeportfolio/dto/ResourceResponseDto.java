@@ -5,7 +5,7 @@ import ru.codeportfolio.models.TypeFile;
 public record ResourceResponseDto(
         String path,
         String name,
-        Integer size,
+        Long size,
         TypeFile type
 ) {
 }

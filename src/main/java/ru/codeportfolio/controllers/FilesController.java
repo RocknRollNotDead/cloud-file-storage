@@ -8,6 +8,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import ru.codeportfolio.dto.ResourceResponseDto;
 import ru.codeportfolio.services.FilesService;
@@ -34,9 +36,10 @@ public class FilesController {
     @ApiResponse(responseCode = "404", description = "Ресурс не найден")
     @GetMapping("/")
     public ResponseEntity<ResourceResponseDto> getInfo(
-            @RequestParam String path) {
+            @RequestParam String path,
+            @AuthenticationPrincipal UserDetails principal) {
 
-        ResourceResponseDto responseDto = service.getInfo(path);
+        ResourceResponseDto responseDto = service.getInfo(path, principal.getUsername());
         return ResponseEntity.ok(responseDto);
     }
 
@@ -47,9 +50,10 @@ public class FilesController {
     @ApiResponse(responseCode = "404", description = "Ресурс не найден")
     @DeleteMapping("/")
     public ResponseEntity delete(
-            @RequestParam String path) {
+            @RequestParam String path,
+            @AuthenticationPrincipal UserDetails principal) {
 
-        service.delete(path);
+        service.delete(path, principal.getUsername());
         return ResponseEntity.noContent().build();
     }
 
@@ -69,7 +73,9 @@ public class FilesController {
     @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
     @ApiResponse(responseCode = "404", description = "Ресурс не найден")
     @GetMapping("/download")
-    public /*ResponseEntity<byte[]>*/ void downloadFile(@RequestParam String path, HttpServletResponse response) throws IOException {
+    public /*ResponseEntity<byte[]>*/ void downloadFile(@RequestParam String path,
+                                                        HttpServletResponse response,
+                                                        @AuthenticationPrincipal UserDetails principal) throws IOException {
      /*   byte[] result = service.getResource(path);
 
         return ResponseEntity.ok()
@@ -80,7 +86,7 @@ public class FilesController {
         response.setContentType("application/zip");
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"archive.zip\"");
 
-        service.zipFolder(path, response.getOutputStream());
+        service.getResource(path, response.getOutputStream(), principal.getUsername());
 
     }
 
@@ -94,9 +100,10 @@ public class FilesController {
     @PostMapping("/move")
     public ResponseEntity<ResourceResponseDto> move(
             @RequestParam String from,
-            @RequestParam String to) {
+            @RequestParam String to,
+            @AuthenticationPrincipal UserDetails principal) {
 
-        ResourceResponseDto responseDto = service.move(from, to);
+        ResourceResponseDto responseDto = service.move(from, to, principal.getUsername());
         return ResponseEntity.ok(responseDto);
     }
 
@@ -106,9 +113,10 @@ public class FilesController {
     @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
     @GetMapping("/search")
     public ResponseEntity<List<ResourceResponseDto>> search(
-            @RequestParam String query) {
+            @RequestParam String query,
+            @AuthenticationPrincipal UserDetails principal) {
 
-        List<ResourceResponseDto> responseDto = service.search(query);
+        List<ResourceResponseDto> responseDto = service.search(query, principal.getUsername());
         return ResponseEntity.ok(responseDto);
     }
 
@@ -119,9 +127,11 @@ public class FilesController {
     @ApiResponse(responseCode = "409", description = "Файл по целевому пути уже существует")
     @PostMapping("/")
     public ResponseEntity<List<ResourceResponseDto>> upload(
-            @RequestParam String path) {// плюс ресурсы
+            @RequestParam String path,
+            @AuthenticationPrincipal UserDetails principal) {// плюс ресурсы
 
-        List<ResourceResponseDto> responseDto = service.upload(path);
+        List<ResourceResponseDto> responseDto = service.upload(path,
+                principal.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
 
     }

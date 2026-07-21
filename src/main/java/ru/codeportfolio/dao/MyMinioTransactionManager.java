@@ -2,25 +2,17 @@ package ru.codeportfolio.dao;
 
 import io.minio.MinioClient;
 import io.minio.errors.*;
-import org.hibernate.NonUniqueResultException;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.stereotype.Component;
 import ru.codeportfolio.dao.func_interfaces.ConsumerThrowing;
 import ru.codeportfolio.dao.func_interfaces.FunctionThrowing;
-import ru.codeportfolio.exceptions.AlreadyExistException;
 import ru.codeportfolio.exceptions.NotFoundException;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-
 @Component
-public class TransactionManager {
+public class MyMinioTransactionManager {
 
     private final MinioClient minioClient;
 
-    public TransactionManager(MinioClient minioClient) {
+    public MyMinioTransactionManager(MinioClient minioClient) {
         this.minioClient = minioClient;
     }
 

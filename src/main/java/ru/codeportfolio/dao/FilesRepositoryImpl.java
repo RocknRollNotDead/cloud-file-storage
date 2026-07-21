@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import ru.codeportfolio.dto.db.FileDownloadDto;
 import ru.codeportfolio.dto.db.FileDto;
+import ru.codeportfolio.models.TypeFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -18,10 +19,10 @@ import java.util.List;
 
 @Repository
 public class FilesRepositoryImpl implements FilesRepository {
-    private final TransactionManager manager;
+    private final MyMinioTransactionManager manager;
     private final String bucketName;
 
-    public FilesRepositoryImpl(TransactionManager manager, @Value("${user.bucket}") String bucketName) {
+    public FilesRepositoryImpl(MyMinioTransactionManager manager, @Value("${spring.minio.bucket}") String bucketName) {
         this.manager = manager;
         this.bucketName = bucketName;
     }
@@ -46,7 +47,8 @@ public class FilesRepositoryImpl implements FilesRepository {
             StatObjectResponse response = getStatResponse(path, client);
             return new FileDto(
                     response.object(),
-                    response.size()
+                    response.size(),
+                    TypeFile.FILE
             );
         });
     }
@@ -92,7 +94,8 @@ public class FilesRepositoryImpl implements FilesRepository {
 
             return new FileDto(
                     response.object(),
-                    response.size()
+                    response.size(),
+                    TypeFile.FILE
             );
         });
 
@@ -148,15 +151,12 @@ public class FilesRepositoryImpl implements FilesRepository {
     public InputStream getFiles(String objectName){
 
         return manager.executeAction(client -> {
-
             return client.getObject(
                     GetObjectArgs.builder()
                             .bucket(bucketName)
                             .object(objectName)
                             .build());
         });
-
-
     }
 
     @Override
@@ -169,8 +169,6 @@ public class FilesRepositoryImpl implements FilesRepository {
                             .recursive(true)
                             .build());
         });
-
-
     }
 
     @Override
@@ -181,7 +179,6 @@ public class FilesRepositoryImpl implements FilesRepository {
         });
 
     }
-
 
     @Override
     public void moveFolder(String from, String to) {
@@ -214,7 +211,6 @@ public class FilesRepositoryImpl implements FilesRepository {
         });
     }
 
-
     @Override
     public List<FileDto> getInfoFolder(String path) {
         return getFileDtos(path);
@@ -230,19 +226,38 @@ public class FilesRepositoryImpl implements FilesRepository {
 
                 result.add(new FileDto(
                         item.get().objectName(),
-                        item.get().size()));
+                        item.get().size(),
+                        item.get().isDir() ? TypeFile.DIRECTORY : TypeFile.FILE));
             }
             return result;
         });
     }
 
+    @Override
+    public boolean isFolderExist(String folderName){
+        return manager.executeAction(client ->
+        {
+            if (client.listObjects(
+                ListObjectsArgs.builder()
+                        .bucket(bucketName)
+                        .prefix(folderName)
+                        .recursive(true)  // false = только прямые "дети", true = вообще всё рекурсивно
+                        .build()).iterator().hasNext()){
+                return true;
+            } else {
+                return false;
+            }
+        });
+
+    }
 
 
 
-    private StatObjectResponse getStatResponse(String to, MinioClient client) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
+
+    private StatObjectResponse getStatResponse(String path, MinioClient client) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
         return client.statObject(StatObjectArgs.builder()
                 .bucket(bucketName)
-                .object(to)
+                .object(path)
                 .build());
     }
 
@@ -255,7 +270,8 @@ public class FilesRepositoryImpl implements FilesRepository {
 
                 result.add( new FileDto(
                         item.get().objectName(),
-                        item.get().size()
+                        item.get().size(),
+                        item.get().isDir() ? TypeFile.DIRECTORY : TypeFile.FILE
                 ));
             }
             return result;

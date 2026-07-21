@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
-@ConfigurationProperties(prefix = "minio")
+@ConfigurationProperties(prefix = "spring.minio")
 public record MinioProperties(
         String endpoint,
         String accessKey,

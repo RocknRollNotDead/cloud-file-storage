@@ -1,16 +1,20 @@
 package ru.codeportfolio.services;
 
 
-import io.minio.GetObjectArgs;
-import io.minio.ListObjectsArgs;
 import io.minio.Result;
 import io.minio.StatObjectResponse;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.codeportfolio.dao.FilesRepository;
+import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.dto.CreateFolderResponseDto;
+import ru.codeportfolio.dto.FolderDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
+import ru.codeportfolio.exceptions.NotFoundException;
+import ru.codeportfolio.exceptions.ValidationException;
+import ru.codeportfolio.util.ResourceMapper;
+import ru.codeportfolio.util.Validator;
 
 
 import java.io.InputStream;
@@ -24,80 +28,161 @@ import java.util.zip.ZipOutputStream;
 public class FilesService {
 
     private final FilesRepository repository;
+    private final UserRepository userRepository;
 
 
-    public FilesService(FilesRepository repository) {
+    public FilesService(FilesRepository repository, UserRepository userRepository) {
         this.repository = repository;
+        this.userRepository = userRepository;
     }
 
 
-    public List<ResourceResponseDto> getFolder(String path) {
+    // папки /directory - 1C, 1R
+    public CreateFolderResponseDto createFolder(String path, String username) {
+        if(!isFolder(path)){
+            throw new ValidationException("This is no folder, this is file " + path);
+        }
+        path = handleRequestAndReturnPath(path, username);
+        repository.createFolder(path);
+        ResourceResponseDto resourceDto = ResourceMapper.mapFolder(path);
+        return  new CreateFolderResponseDto(resourceDto.path(),
+                resourceDto.name(),
+                resourceDto.type());
+    }
+
+
+    public List<ResourceResponseDto> getFolder(String path, String username) {
+        if(!isFolder(path)){
+            throw new ValidationException("This is no folder, this is file " + path);
+        }
+        String oldPath = path;
+        path = handleRequestAndReturnPath(path, username);
+        if (repository.isFolderExist(path)){
+
+            return ResourceMapper.mapResourcesInFolder(repository.getInfoFolder(path));
+        } else {
+            throw new NotFoundException("Folder not found " + oldPath);
+        }
+    }
+
+
+
+    // общее - 1C, 3R, 1U, 1D
+
+    // готово - 3R, 1U, 1D
+    // осталось - 1C
+
+
+    public List<ResourceResponseDto> upload(String path, String username) {
         return null;
     }
 
-    public CreateFolderResponseDto createFolder(String path) {
-        return null;
+
+    public ResourceResponseDto getInfo(String path, String username) {
+
+        String oldPath = path;
+        path = handleRequestAndReturnPath(path, username);
+
+        if(!isFolder(path)){
+            return ResourceMapper.mapResource(
+                    repository.getInfoFile(path)
+            );
+        }
+        if (repository.isFolderExist(path)){
+
+            return ResourceMapper.mapFolder(oldPath);
+        } else {
+            throw new NotFoundException("Folder not found " + oldPath);
+        }
     }
 
-    public ResourceResponseDto getInfo(String path) {
-        return null;
-    }
-
-    public void delete(String path) {
-        //определить файл или папка
-        repository.deleteFile(path);
-    }
-
-    public ResourceResponseDto move(String from, String to) {
-        return null;
-    }
-
-    public List<ResourceResponseDto> search(String query) {
-        return null;
-    }
-
-    public List<ResourceResponseDto> upload(String path) {
-        return null;
-    }
-
-    public void getResource(String path, OutputStream outputStream) {
-        // прочитать сессию, узнать юзера
-        // по юзеру достать файл
-
-        String userId = "";
-
-        path = getPath(userId, path);
+    public void getResource(String path, OutputStream outputStream, String username) {
+        path = handleRequestAndReturnPath(path, username);
 
         if (isFolder(path)) {
-//            repository.getFolder(path); // todo настроить скачивание папки или файла
             zipFolder(path, outputStream);
         } else {
-//            return repository.getFile(path);
             streamFile(path, outputStream);
         }
-
-        //если это папка - завернуть в зип
-
-//        return null;
     }
 
+    public List<ResourceResponseDto> search(String query, String username) {
+
+        query = handleRequestAndReturnPath(query, username);
+
+        return ResourceMapper.mapResourcesInFolder(repository.search(query));
+
+    }
+
+
+    public ResourceResponseDto move(String from, String to, String username) {
+        from = handleRequestAndReturnPath(from, username);
+        to = handleRequestAndReturnPath(to, username);
+        if(isFolder(from) && isFolder(to)){
+            repository.moveFolder(from, to);
+            return ResourceMapper.mapFolder(to);
+        } else if(!isFolder(from) && !isFolder(to)) {
+            repository.moveFile(from, to);
+            return ResourceMapper.mapResource(repository.getInfoFile(to));
+        } else {
+            throw new ValidationException("Path 1 and path 2 must be both folders or both files!");
+        }
+
+    }
+
+
+    public void delete(String path, String username) {
+        path = handleRequestAndReturnPath(path, username);
+
+        if(isFolder(path)){
+            repository.deleteFolder(path);
+        } else {
+            repository.deleteFile(path);
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private void streamFile(String path, OutputStream outputStream) {
+        try {
+            StatObjectResponse object = repository.getItem(path);
+            try (InputStream fileStream = repository.getFiles(object.object())) {
+
+                fileStream.transferTo(outputStream);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка выдачи файла: " + path, e);
+        }
+    }
 
     private boolean isFolder(String path) {
         return path.charAt(path.length() - 1) == '/';
     }
 
-    private String getPath(String userId, String path) {
+    private String getPath(Long userId, String path) {
         return "%s/%s".formatted(
                 getFolderName(userId),
                 path
         );
     }
 
-    private String getFolderName(String userId) {
-        return "user-%s-files".formatted(userId);
+    private String getFolderName(Long userId) {
+        return "user-%d-files".formatted(userId);
     }
 
-    public void zipFolder(String path, OutputStream outputStream) {
+    private void zipFolder(String path, OutputStream outputStream) {
         try (ZipOutputStream zipOut = new ZipOutputStream(outputStream)) {
 
             Iterable<Result<Item>> objects = repository.getItems(path);
@@ -124,18 +209,28 @@ public class FilesService {
         }
     }
 
-    public void streamFile(String path, OutputStream outputStream) {
-        try {
-            StatObjectResponse object = repository.getItem(path);
-            try (InputStream fileStream = repository.getFiles(object.object())) {
+    private void createUserFolder(Long userId){
 
-                fileStream.transferTo(outputStream);
-            }
+        String folderName = getFolderName(userId);
 
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка выдачи файла: " + path, e);
+        if (!repository.isFolderExist(folderName)){
+            repository.createFolder(folderName);
         }
+
     }
+
+    private String handleRequestAndReturnPath(String path, String username){
+        username = Validator.validateUsername(username);
+        path = Validator.validatePath(path);
+
+        Long userId = userRepository.findUsersByLogin(username).orElseThrow(() -> new NotFoundException("User not found!")).getId();
+        createUserFolder(userId);
+
+        return getPath(userId, path);
+
+    }
+
+
 
 
 }

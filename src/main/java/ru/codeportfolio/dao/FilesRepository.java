@@ -35,11 +35,13 @@ public interface FilesRepository {
     void deleteFolder(String path);
 
 
-    public InputStream getFiles(String objectName);
+    InputStream getFiles(String objectName);
 
     Iterable<Result<Item>> getItems(String path);
 
 
+
+    public boolean isFolderExist(String folderName);
 
 
     List<FileDto> search(String query);
