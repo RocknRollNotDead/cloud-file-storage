@@ -6,19 +6,21 @@ import io.minio.StatObjectResponse;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import ru.codeportfolio.dao.FilesRepository;
 import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.dto.CreateFolderResponseDto;
-import ru.codeportfolio.dto.FolderDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
+import ru.codeportfolio.exceptions.DataAccessException;
 import ru.codeportfolio.exceptions.NotFoundException;
 import ru.codeportfolio.exceptions.ValidationException;
 import ru.codeportfolio.util.ResourceMapper;
 import ru.codeportfolio.util.Validator;
 
-
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -52,11 +54,14 @@ public class FilesService {
 
 
     public List<ResourceResponseDto> getFolder(String path, String username) {
+
+        String oldPath = path;
+        path = handleRequestAndReturnPath(path, username);
+        log.debug("прошло валидацию");
         if(!isFolder(path)){
             throw new ValidationException("This is no folder, this is file " + path);
         }
-        String oldPath = path;
-        path = handleRequestAndReturnPath(path, username);
+
         if (repository.isFolderExist(path)){
 
             return ResourceMapper.mapResourcesInFolder(repository.getInfoFolder(path));
@@ -69,18 +74,29 @@ public class FilesService {
 
     // общее - 1C, 3R, 1U, 1D
 
-    // готово - 3R, 1U, 1D
-    // осталось - 1C
-
-
-    public List<ResourceResponseDto> upload(String path, String username) {
-        return null;
+    public List<ResourceResponseDto> upload(String path, String username, List<MultipartFile> files) {
+        // todo проверить вдруг уже гигабайт
+        path = handleRequestAndReturnPath(path, username);
+        List<ResourceResponseDto> result = new ArrayList<>();
+        for(MultipartFile file : files){
+            try{
+                repository.saveFile(
+                        path,
+                        file.getInputStream(),
+                        file.getSize(),
+                        file.getContentType()
+                        );
+                result.add(ResourceMapper.mapResource(repository.getInfoFile(path)));
+            } catch (IOException e) {
+                throw new DataAccessException("Ошибка сохранения файла");
+            }
+        }
+        return result;
     }
 
 
     public ResourceResponseDto getInfo(String path, String username) {
 
-        String oldPath = path;
         path = handleRequestAndReturnPath(path, username);
 
         if(!isFolder(path)){
@@ -90,9 +106,9 @@ public class FilesService {
         }
         if (repository.isFolderExist(path)){
 
-            return ResourceMapper.mapFolder(oldPath);
+            return ResourceMapper.mapFolder(path);
         } else {
-            throw new NotFoundException("Folder not found " + oldPath);
+            throw new NotFoundException("Folder not found " + path);
         }
     }
 

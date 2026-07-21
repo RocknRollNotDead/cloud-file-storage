@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import ru.codeportfolio.dto.ResourceResponseDto;
 import ru.codeportfolio.services.FilesService;
 
@@ -128,10 +129,11 @@ public class FilesController {
     @PostMapping("/")
     public ResponseEntity<List<ResourceResponseDto>> upload(
             @RequestParam String path,
-            @AuthenticationPrincipal UserDetails principal) {// плюс ресурсы
+            @AuthenticationPrincipal UserDetails principal,
+            List<MultipartFile> files) {// плюс ресурсы
 
         List<ResourceResponseDto> responseDto = service.upload(path,
-                principal.getUsername());
+                principal.getUsername(), files);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
 
     }

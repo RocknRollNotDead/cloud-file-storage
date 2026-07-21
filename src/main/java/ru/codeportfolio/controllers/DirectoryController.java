@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import jdk.jfr.ContentType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/directory")
+@Slf4j
 public class DirectoryController {
     private final FilesService service;
 
@@ -53,8 +55,10 @@ public class DirectoryController {
     public ResponseEntity<CreateFolderResponseDto> createFolder(
             @RequestParam String path,
             @AuthenticationPrincipal UserDetails principal) {
+        String username = principal.getUsername();
+        log.debug(username);
+        CreateFolderResponseDto responseDto = service.createFolder(path, username);
 
-        CreateFolderResponseDto responseDto = service.createFolder(path, principal.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 }

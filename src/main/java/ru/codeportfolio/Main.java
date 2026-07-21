@@ -10,11 +10,10 @@ public class Main {
     // (2 контроллера - авторизация и работа с файлами✅
     // (загрузка, выгрузка, инфа✅))
     // сделать сервисы ...
-    // сделать дао которое обращается к S3 ✅ и redis✅ и (sql бд - mariaDB✅) и делает зип ..
+    // сделать дао которое обращается к S3 ✅ и redis✅ и (sql бд - mariaDB✅) и делает зип ✅
     // интегрировать сессии ✅
 
     public static void main(String[] args) {
-        System.out.println("Hello world!");
         SpringApplication.run(Main.class, args);
     }
 

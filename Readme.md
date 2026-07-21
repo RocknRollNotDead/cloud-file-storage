@@ -67,6 +67,10 @@
 
 ---
 
+## Swagger
+
+Также эта информация указана в swagger - https://codeportfolio.ru/cloud-file-storage/swagger-ui/index.html, http://193.168.46.216:8080/cloud-file-storage/swagger-ui/index.html
+
 ## Как буду деплоить
 
 ### 1. Зайти в Ubuntu
