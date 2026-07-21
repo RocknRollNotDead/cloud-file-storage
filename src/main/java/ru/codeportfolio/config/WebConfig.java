@@ -1,6 +1,5 @@
 package ru.codeportfolio.config;
 
-import io.minio.MinioClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -13,7 +12,6 @@ import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
-import ru.codeportfolio.dao.MyMinioTransactionManager;
 
 import java.io.IOException;
 
@@ -31,11 +29,6 @@ public class WebConfig implements WebMvcConfigurer {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
-//    @Bean
-//    public MyMinioTransactionManager getMyMinioTransactionManager(MinioClient minioClient){
-//        return new MyMinioTransactionManager(minioClient);
-//    }
 
     // потом разберусь в каждой строчке, если не успею запустить через nginx до того как дойду до этого
     @Override

@@ -5,16 +5,17 @@ import io.minio.Result;
 import io.minio.StatObjectResponse;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.codeportfolio.dao.FilesRepository;
 import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.dto.CreateFolderResponseDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
+import ru.codeportfolio.dto.UsersSizeDto;
 import ru.codeportfolio.exception.DataAccessException;
 import ru.codeportfolio.exception.NotFoundException;
 import ru.codeportfolio.exception.ValidationException;
+import ru.codeportfolio.model.User;
 import ru.codeportfolio.util.ResourceMapper;
 import ru.codeportfolio.util.Validator;
 
@@ -42,14 +43,14 @@ public class FilesService {
 
     // папки /directory - 1C, 1R
     public CreateFolderResponseDto createFolder(String path, String username) {
-        if(!isFolder(path)){
+        if (!isFolder(path)) {
             throw new ValidationException("This is no folder, this is file " + path);
         }
         path = handleRequestAndReturnPath(path, username);
         repository.createFolder(path);
         log.info("вызывается create напрямую");
         ResourceResponseDto resourceDto = ResourceMapper.mapFolder(path);
-        return  new CreateFolderResponseDto(resourceDto.path(),
+        return new CreateFolderResponseDto(resourceDto.path(),
                 resourceDto.name(),
                 resourceDto.type());
     }
@@ -60,18 +61,17 @@ public class FilesService {
         path = handleRequestAndReturnPath(path, username);
         log.info(path);
 
-        if(!isFolder(path)){
+        if (!isFolder(path)) {
             throw new ValidationException("This is no folder, this is file " + path);
         }
 
-        if (repository.isFolderExist(path)){
+        if (repository.isFolderExist(path)) {
 
             return ResourceMapper.mapResourcesInFolder(repository.getInfoFolder(path));
         } else {
             throw new NotFoundException("Folder not found " + path);
         }
     }
-
 
 
     // общее - 1C, 3R, 1U, 1D
@@ -82,27 +82,27 @@ public class FilesService {
         log.info(String.valueOf(files.size()));
         String filePath;
 
-        if(checkGigabyte(username)){
+        if (checkGigabyte(username)) {
             throw new ValidationException("You're running low on disk space. Buy yourself a hard drive.");
         }
 
-        for(MultipartFile file : files){
-            if (file == null){
+        for (MultipartFile file : files) {
+            if (file == null) {
                 continue;
             }
 
-            if(checkGigabyte(username)){
+            if (checkGigabyte(username)) {
                 throw new ValidationException("Error saving file - not enough space.");
             }
 
             filePath = path + file.getOriginalFilename();
-            try{
+            try {
                 repository.saveFile(
                         filePath,
                         file.getInputStream(),
                         file.getSize(),
                         file.getContentType()
-                        );
+                );
                 log.info(filePath);
                 result.add(ResourceMapper.mapResource(repository.getInfoFile(filePath)));
             } catch (IOException e) {
@@ -122,12 +122,12 @@ public class FilesService {
 
         path = handleRequestAndReturnPath(path, username);
 
-        if(!isFolder(path)){
+        if (!isFolder(path)) {
             return ResourceMapper.mapResource(
                     repository.getInfoFile(path)
             );
         }
-        if (repository.isFolderExist(path)){
+        if (repository.isFolderExist(path)) {
 
             return ResourceMapper.mapFolder(path);
         } else {
@@ -158,10 +158,10 @@ public class FilesService {
 
         from = handleRequestAndReturnPath(from, username);
         to = handleRequestAndReturnPath(to, username);
-        if(isFolder(from) && isFolder(to)){
+        if (isFolder(from) && isFolder(to)) {
             repository.moveFolder(from, to);
             return ResourceMapper.mapFolder(to);
-        } else if(!isFolder(from) && !isFolder(to)) {
+        } else if (!isFolder(from) && !isFolder(to)) {
             repository.moveFile(from, to);
             return ResourceMapper.mapResource(repository.getInfoFile(to));
         } else {
@@ -174,7 +174,7 @@ public class FilesService {
     public void delete(String path, String username) {
         path = handleRequestAndReturnPath(path, username);
 
-        if(isFolder(path)){
+        if (isFolder(path)) {
             repository.deleteFolder(path);
         } else {
             repository.deleteFile(path);
@@ -182,16 +182,36 @@ public class FilesService {
 
     }
 
+    public void deleteById(Long id) {
+        if (id == null) {
+            throw new ValidationException("Not found userId");
+        }
+
+        String path = getPath(id, "");
+        repository.deleteFolder(path);
+
+    }
 
 
+    public List<UsersSizeDto> getUsers() {
+        List<User> users = userRepository.findAll();
+        List<UsersSizeDto> result = new ArrayList<>();
+
+        for (User user : users) {
+            try {
+                result.add(new UsersSizeDto(
+                        user.getLogin(),
+                        user.getId(),
+                        repository.getSize(getFolderName(user.getId()))
+                ));
+            } catch (RuntimeException e) {
+                continue;
+            }
 
 
-
-
-
-
-
-
+        }
+        return result;
+    }
 
 
     private void streamFile(String path, OutputStream outputStream) {
@@ -251,18 +271,18 @@ public class FilesService {
         }
     }
 
-    private void createUserFolder(Long userId){
+    private void createUserFolder(Long userId) {
 
         String folderName = getFolderName(userId);
 
-        if (!repository.isFolderExist(folderName)){
+        if (!repository.isFolderExist(folderName)) {
             log.info("Создаётся папка " + folderName);
             repository.createFolder(folderName);
         }
 
     }
 
-    private String handleRequestAndReturnPath(String path, String username){
+    private String handleRequestAndReturnPath(String path, String username) {
         username = Validator.validateUsername(username);
         path = Validator.validatePath(path);
 
@@ -272,8 +292,6 @@ public class FilesService {
         return getPath(userId, path);
 
     }
-
-
 
 
 }

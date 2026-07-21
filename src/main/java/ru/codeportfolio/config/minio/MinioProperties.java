@@ -10,5 +10,5 @@ public record MinioProperties(
         String accessKey,
         String secretKey,
         String bucket
-)  {
+) {
 }

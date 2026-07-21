@@ -32,7 +32,7 @@ public class DirectoryController {
     @GetMapping()
     public ResponseEntity<List<ResourceResponseDto>> getFolder(
             @RequestParam String path,
-            @AuthenticationPrincipal UserDetails principal){
+            @AuthenticationPrincipal UserDetails principal) {
 
         List<ResourceResponseDto> responseDto = service.getFolder(path, principal.getUsername());
         return ResponseEntity.ok(responseDto);

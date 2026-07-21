@@ -1,6 +1,6 @@
 package ru.codeportfolio.exception;
 
-public class UncorrectRequestException extends RuntimeException{
+public class UncorrectRequestException extends RuntimeException {
 
     public UncorrectRequestException(String message) {
         super(message);

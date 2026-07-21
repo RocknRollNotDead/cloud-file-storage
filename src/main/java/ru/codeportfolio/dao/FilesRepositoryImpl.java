@@ -78,7 +78,7 @@ public class FilesRepositoryImpl implements FilesRepository {
     }
 
     @Override
-    public void deleteFile(String path){
+    public void deleteFile(String path) {
         manager.executeInTransactionWithoutReturn(client ->
         {
             removeObject(path, client);
@@ -87,9 +87,7 @@ public class FilesRepositoryImpl implements FilesRepository {
     }
 
 
-
-
-    public byte[] getFile(String path){
+    public byte[] getFile(String path) {
         return manager.executeAction(client ->
         {
             return client.getObject(
@@ -143,7 +141,7 @@ public class FilesRepositoryImpl implements FilesRepository {
     }
 
 
-    public InputStream getFiles(String objectName){
+    public InputStream getFiles(String objectName) {
 
         return manager.executeAction(client -> {
             return client.getObject(
@@ -229,15 +227,15 @@ public class FilesRepositoryImpl implements FilesRepository {
     }
 
     @Override
-    public boolean isFolderExist(String folderName){
+    public boolean isFolderExist(String folderName) {
         return manager.executeAction(client ->
         {
             if (client.listObjects(
-                ListObjectsArgs.builder()
-                        .bucket(bucketName)
-                        .prefix(folderName)
-                        .recursive(true)  // false = только прямые "дети", true = вообще всё рекурсивно
-                        .build()).iterator().hasNext()){
+                    ListObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .prefix(folderName)
+                            .recursive(true)  // false = только прямые "дети", true = вообще всё рекурсивно
+                            .build()).iterator().hasNext()) {
                 return true;
             } else {
                 return false;
@@ -245,8 +243,6 @@ public class FilesRepositoryImpl implements FilesRepository {
         });
 
     }
-
-
 
 
     private StatObjectResponse getStatResponse(String path, MinioClient client) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
@@ -266,7 +262,7 @@ public class FilesRepositoryImpl implements FilesRepository {
                 if (item.get().objectName().equals(path)) {
                     continue;
                 }
-                result.add( new FileDto(
+                result.add(new FileDto(
                         item.get().objectName(),
                         item.get().isDir() ? null : item.get().size(),
                         item.get().isDir() ? TypeFile.DIRECTORY : TypeFile.FILE
@@ -277,7 +273,7 @@ public class FilesRepositoryImpl implements FilesRepository {
     }
 
     private Iterable<Result<Item>> getListItems(MinioClient client, String query, boolean recursive) {
-        log.info("query "+ query);
+        log.info("query " + query);
         return client.listObjects(
                 ListObjectsArgs.builder()
                         .bucket(bucketName)
@@ -310,7 +306,7 @@ public class FilesRepositoryImpl implements FilesRepository {
                         .build());
     }
 
-    public Long getSize(String path){
+    public Long getSize(String path) {
 
         return manager.executeAction(client ->
         {

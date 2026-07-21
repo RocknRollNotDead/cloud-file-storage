@@ -3,7 +3,6 @@ package ru.codeportfolio.dao;
 import io.minio.Result;
 import io.minio.StatObjectResponse;
 import io.minio.messages.Item;
-import ru.codeportfolio.dto.db.FileDownloadDto;
 import ru.codeportfolio.dto.db.FileDto;
 
 import java.io.InputStream;

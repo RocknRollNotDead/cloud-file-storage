@@ -78,18 +78,17 @@ public class FilesController {
     @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
     @ApiResponse(responseCode = "404", description = "Ресурс не найден")
     @GetMapping("/download")
-    public /*ResponseEntity<byte[]>*/ void downloadFile(@RequestParam String path,
-                                                        HttpServletResponse response,
-                                                        @AuthenticationPrincipal UserDetails principal) throws IOException {
+    public /*ResponseEntity<byte[]>*/ void downloadResource(@RequestParam String path,
+                                                            HttpServletResponse response,
+                                                            @AuthenticationPrincipal UserDetails principal) throws IOException {
      /*   byte[] result = service.getResource(path);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(result);
 */
-        log.info(path);
         response.setContentType("application/zip");
-        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"archive.zip\"");
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment");// filename="archive.zip"
 
         service.getResource(path, response.getOutputStream(), principal.getUsername());
 
@@ -137,7 +136,7 @@ public class FilesController {
             @AuthenticationPrincipal UserDetails principal,
             @RequestParam List<MultipartFile> object) {
 
-        if (object == null){
+        if (object == null) {
             throw new ValidationException("Non file found!");
         }
 
@@ -146,12 +145,6 @@ public class FilesController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
 
     }
-
-
-
-
-
-
 
 
 }

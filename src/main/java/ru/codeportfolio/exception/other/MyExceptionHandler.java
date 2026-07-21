@@ -3,6 +3,7 @@ package ru.codeportfolio.exception.other;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -31,21 +32,24 @@ public class MyExceptionHandler {
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Map<String, String>> handleGeneric(ValidationException e) {
-        log.debug("debug handle " + e);
         return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Map<String, String>> handleGeneric(BadCredentialsException e){
+    public ResponseEntity<Map<String, String>> handleGeneric(BadCredentialsException e) {
 
         return buildResponse(HttpStatus.UNAUTHORIZED, "Not right login or password!");
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Map<String, String>> handleAuth(AuthenticationException e) {
-        log.debug("debug handle " + e);
         return buildResponse(HttpStatus.UNAUTHORIZED, "User not authorized!");//e.getMessage()
 
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleGeneric(AccessDeniedException e) {
+        return buildResponse(HttpStatus.FORBIDDEN, "Access denied!!!");
     }
 
     @ExceptionHandler(RuntimeException.class)

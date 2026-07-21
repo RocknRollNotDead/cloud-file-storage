@@ -1,3 +1,4 @@
 package ru.codeportfolio.dto.db;
 
-public record FileDownloadDto(String name, byte[] content) {}
+public record FileDownloadDto(String name, byte[] content) {
+}

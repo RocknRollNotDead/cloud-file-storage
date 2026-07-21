@@ -12,7 +12,7 @@ public final class ResourceMapper {
     private ResourceMapper() {
     }
 
-    public static ResourceResponseDto mapResource(FileDto fileDto){
+    public static ResourceResponseDto mapResource(FileDto fileDto) {
         String[] pathAndName = fileDto.name().split("/");
 
         String name = pathAndName[pathAndName.length - 1];
@@ -21,7 +21,7 @@ public final class ResourceMapper {
         return new ResourceResponseDto(path, name, fileDto.size(), TypeFile.FILE);
     }
 
-    public static ResourceResponseDto mapFolder(String path){
+    public static ResourceResponseDto mapFolder(String path) {
         String[] pathAndName = path.split("/");
         String nameFolder = pathAndName[pathAndName.length - 1];
 
@@ -52,10 +52,10 @@ public final class ResourceMapper {
         return path;
     }
 
-    public static List<ResourceResponseDto> mapResourcesInFolder(List<FileDto> files){
+    public static List<ResourceResponseDto> mapResourcesInFolder(List<FileDto> files) {
         List<ResourceResponseDto> result = new ArrayList<>();
 
-        for(FileDto fileDto : files){
+        for (FileDto fileDto : files) {
             String path = fileDto.name();
             String[] pathAndName = path.split("/");
             String nameFolder = pathAndName[pathAndName.length - 1];

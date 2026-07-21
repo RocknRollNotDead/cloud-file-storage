@@ -1,7 +1,7 @@
 package ru.codeportfolio.dao;
 
 import io.minio.MinioClient;
-import io.minio.errors.*;
+import io.minio.errors.ErrorResponseException;
 import org.springframework.stereotype.Component;
 import ru.codeportfolio.dao.func_interfaces.ConsumerThrowing;
 import ru.codeportfolio.dao.func_interfaces.FunctionThrowing;
@@ -16,7 +16,7 @@ public class MyMinioTransactionManager {
         this.minioClient = minioClient;
     }
 
-    public <T> T executeAction(FunctionThrowing<MinioClient, T> action){
+    public <T> T executeAction(FunctionThrowing<MinioClient, T> action) {
 
 
         T result = null;
@@ -32,11 +32,11 @@ public class MyMinioTransactionManager {
         }
         return result;
 
-                //todo обработать тут всё
+        //todo обработать тут всё
 
     }
 
-    public <T> void executeInTransactionWithoutReturn(ConsumerThrowing<MinioClient> action){
+    public <T> void executeInTransactionWithoutReturn(ConsumerThrowing<MinioClient> action) {
         executeAction(client -> {
             action.apply(client);
             return null;
