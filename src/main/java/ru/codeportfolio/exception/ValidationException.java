@@ -1,4 +1,4 @@
-package ru.codeportfolio.exceptions;
+package ru.codeportfolio.exception;
 
 public class ValidationException extends RuntimeException{
     public ValidationException(String message, Exception e){

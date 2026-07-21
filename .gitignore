@@ -9,6 +9,8 @@ build/
 legacy
 **/**/resources/static
 !**/**/resources/application.yml
+cloud-storage-frontend-master
+app.jar
 
 ### IntelliJ IDEA ###
 

@@ -1,10 +1,9 @@
 package ru.codeportfolio.util;
 
 import org.jspecify.annotations.NonNull;
-import ru.codeportfolio.dto.FolderDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
 import ru.codeportfolio.dto.db.FileDto;
-import ru.codeportfolio.models.TypeFile;
+import ru.codeportfolio.model.TypeFile;
 
 import java.util.ArrayList;
 import java.util.List;

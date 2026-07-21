@@ -1,6 +1,6 @@
 package ru.codeportfolio.dto;
 
-import ru.codeportfolio.models.TypeFile;
+import ru.codeportfolio.model.TypeFile;
 
 public record CreateFolderResponseDto(
         String path,

@@ -1,4 +1,4 @@
-package ru.codeportfolio.controllers;
+package ru.codeportfolio.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.codeportfolio.dto.RequestAuthDto;
 import ru.codeportfolio.dto.UserDto;
-import ru.codeportfolio.services.UserService;
+import ru.codeportfolio.service.UserService;
 
 @RestController
 @RequestMapping("/auth")

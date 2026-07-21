@@ -1,4 +1,4 @@
-package ru.codeportfolio.exceptions;
+package ru.codeportfolio.exception;
 
 public class UncorrectRequestException extends RuntimeException{
 

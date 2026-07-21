@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import ru.codeportfolio.dao.UserRepository;
-import ru.codeportfolio.models.User;
+import ru.codeportfolio.model.User;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;

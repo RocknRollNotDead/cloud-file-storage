@@ -1,17 +1,15 @@
-package ru.codeportfolio.exceptions.other;
+package ru.codeportfolio.exception.other;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import ru.codeportfolio.exceptions.AlreadyExistException;
-import ru.codeportfolio.exceptions.NotFoundException;
-import ru.codeportfolio.exceptions.ValidationException;
+import ru.codeportfolio.exception.AlreadyExistException;
+import ru.codeportfolio.exception.NotFoundException;
+import ru.codeportfolio.exception.ValidationException;
 
 import java.util.Map;
 

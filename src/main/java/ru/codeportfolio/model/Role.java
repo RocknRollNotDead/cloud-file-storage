@@ -1,4 +1,4 @@
-package ru.codeportfolio.models;
+package ru.codeportfolio.model;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;

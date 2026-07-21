@@ -1,19 +1,20 @@
-package ru.codeportfolio.services;
+package ru.codeportfolio.service;
 
 
 import io.minio.Result;
 import io.minio.StatObjectResponse;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.codeportfolio.dao.FilesRepository;
 import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.dto.CreateFolderResponseDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
-import ru.codeportfolio.exceptions.DataAccessException;
-import ru.codeportfolio.exceptions.NotFoundException;
-import ru.codeportfolio.exceptions.ValidationException;
+import ru.codeportfolio.exception.DataAccessException;
+import ru.codeportfolio.exception.NotFoundException;
+import ru.codeportfolio.exception.ValidationException;
 import ru.codeportfolio.util.ResourceMapper;
 import ru.codeportfolio.util.Validator;
 
@@ -76,16 +77,24 @@ public class FilesService {
     // общее - 1C, 3R, 1U, 1D
 
     public List<ResourceResponseDto> upload(String path, String username, List<MultipartFile> files) {
-        // todo проверить вдруг уже гигабайт
         path = handleRequestAndReturnPath(path, username);
         List<ResourceResponseDto> result = new ArrayList<>();
         log.info(String.valueOf(files.size()));
         String filePath;
 
+        if(checkGigabyte(username)){
+            throw new ValidationException("You're running low on disk space. Buy yourself a hard drive.");
+        }
+
         for(MultipartFile file : files){
             if (file == null){
                 continue;
             }
+
+            if(checkGigabyte(username)){
+                throw new ValidationException("Error saving file - not enough space.");
+            }
+
             filePath = path + file.getOriginalFilename();
             try{
                 repository.saveFile(
@@ -102,6 +111,10 @@ public class FilesService {
 
         }
         return result;
+    }
+
+    private boolean checkGigabyte(String username) {
+        return repository.getSize(handleRequestAndReturnPath("", username)) > 1_000_000_000L;
     }
 
 

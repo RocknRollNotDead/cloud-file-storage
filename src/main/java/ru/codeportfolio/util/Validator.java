@@ -1,6 +1,6 @@
 package ru.codeportfolio.util;
 
-import ru.codeportfolio.exceptions.ValidationException;
+import ru.codeportfolio.exception.ValidationException;
 
 public final class Validator {
     private Validator() {

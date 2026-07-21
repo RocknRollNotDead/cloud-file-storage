@@ -1,4 +1,4 @@
-package ru.codeportfolio.models;
+package ru.codeportfolio.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;

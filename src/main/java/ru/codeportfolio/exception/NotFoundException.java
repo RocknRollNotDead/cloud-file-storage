@@ -1,4 +1,4 @@
-package ru.codeportfolio.exceptions;
+package ru.codeportfolio.exception;
 
 public class NotFoundException extends RuntimeException{
     public NotFoundException(String message) {

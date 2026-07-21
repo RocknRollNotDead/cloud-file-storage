@@ -37,7 +37,7 @@ public interface FilesRepository {
 
     Iterable<Result<Item>> getItems(String path);
 
-
+    Long getSize(String path);
 
     boolean isFolderExist(String folderName);
 

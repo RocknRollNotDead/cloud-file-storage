@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import ru.codeportfolio.dto.db.FileDownloadDto;
 import ru.codeportfolio.dto.db.FileDto;
-import ru.codeportfolio.models.TypeFile;
+import ru.codeportfolio.model.TypeFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -17,6 +17,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+
 @Slf4j
 @Repository
 public class FilesRepositoryImpl implements FilesRepository {
@@ -26,32 +27,6 @@ public class FilesRepositoryImpl implements FilesRepository {
     public FilesRepositoryImpl(MyMinioTransactionManager manager, @Value("${spring.minio.bucket}") String bucketName) {
         this.manager = manager;
         this.bucketName = bucketName;
-    }
-
-
-
-    @Override
-    public void deleteFile(String path){
-        manager.executeInTransactionWithoutReturn(client ->
-        {
-            removeObject(path, client);
-        });
-
-    }
-
-
-
-    @Override
-    public FileDto getInfoFile(String path) {
-        return manager.executeAction(client ->
-        {
-            StatObjectResponse response = getStatResponse(path, client);
-            return new FileDto(
-                    response.object(),
-                    response.size(),
-                    TypeFile.FILE
-            );
-        });
     }
 
 
@@ -70,15 +45,16 @@ public class FilesRepositoryImpl implements FilesRepository {
         });
     }
 
-    public byte[] getFile(String path){
+    @Override
+    public FileDto getInfoFile(String path) {
         return manager.executeAction(client ->
         {
-            return client.getObject(
-                    GetObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(path)
-                            .build()).readAllBytes();
-
+            StatObjectResponse response = getStatResponse(path, client);
+            return new FileDto(
+                    response.object(),
+                    response.size(),
+                    TypeFile.FILE
+            );
         });
     }
 
@@ -99,6 +75,30 @@ public class FilesRepositoryImpl implements FilesRepository {
             );
         });
 
+    }
+
+    @Override
+    public void deleteFile(String path){
+        manager.executeInTransactionWithoutReturn(client ->
+        {
+            removeObject(path, client);
+        });
+
+    }
+
+
+
+
+    public byte[] getFile(String path){
+        return manager.executeAction(client ->
+        {
+            return client.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(path)
+                            .build()).readAllBytes();
+
+        });
     }
 
 
@@ -308,6 +308,23 @@ public class FilesRepositoryImpl implements FilesRepository {
                                         .object(from)
                                         .build())
                         .build());
+    }
+
+    public Long getSize(String path){
+
+        return manager.executeAction(client ->
+        {
+            Long result = 0L;
+
+            for (Result<Item> item : getListItems(client, path, true)) {
+
+                result = result + item.get().size();
+            }
+
+
+            return result;
+        });
+
     }
 
 

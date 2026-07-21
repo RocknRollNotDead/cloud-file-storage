@@ -5,7 +5,7 @@ import io.minio.errors.*;
 import org.springframework.stereotype.Component;
 import ru.codeportfolio.dao.func_interfaces.ConsumerThrowing;
 import ru.codeportfolio.dao.func_interfaces.FunctionThrowing;
-import ru.codeportfolio.exceptions.NotFoundException;
+import ru.codeportfolio.exception.NotFoundException;
 
 @Component
 public class MyMinioTransactionManager {

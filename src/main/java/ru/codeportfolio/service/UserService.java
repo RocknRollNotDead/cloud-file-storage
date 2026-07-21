@@ -1,18 +1,16 @@
-package ru.codeportfolio.services;
+package ru.codeportfolio.service;
 
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Transactional;
 import ru.codeportfolio.dao.FilesRepository;
 import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.dto.UserDto;
-import ru.codeportfolio.exceptions.AlreadyExistException;
-import ru.codeportfolio.exceptions.NotFoundException;
-import ru.codeportfolio.models.Role;
-import ru.codeportfolio.models.User;
+import ru.codeportfolio.exception.AlreadyExistException;
+import ru.codeportfolio.exception.NotFoundException;
+import ru.codeportfolio.model.Role;
+import ru.codeportfolio.model.User;
 
 @Transactional
 @Service
