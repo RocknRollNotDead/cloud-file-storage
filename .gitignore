@@ -7,9 +7,11 @@ build/
 .env
 .idea
 legacy
+
 **/**/resources/static
-!**/**/resources/application.yml
+!**/**/resources/static/admin-panel.html
 cloud-storage-frontend-master
+
 app.jar
 
 ### IntelliJ IDEA ###
