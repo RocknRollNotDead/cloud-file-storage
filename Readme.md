@@ -4,7 +4,7 @@
 Шестой учебный проект из [роадмапа Сергея Жукова](https://zhukovsd.github.io/java-backend-learning-course/).
 [ТЗ проекта](https://zhukovsd.github.io/java-backend-learning-course/projects/cloud-file-storage/).
 
-Будет задеплоен на http://193.168.46.216:8080/cloud-file-storage и https://codeportfolio.ru/cloud-file-storage
+Будет задеплоен на http://193.168.46.216:8081 и https://cloud-file-storage.codeportfolio.ru/
 
 ## Стек и структура
 
@@ -69,7 +69,9 @@
 
 ## Swagger
 
-Также эта информация указана в swagger - https://cloud-file-storage.codeportfolio.ru/swagger-ui/index.html, http://193.168.46.216:8080/swagger-ui/index.html
+Также эта информация указана в swagger - 
+https://cloud-file-storage.codeportfolio.ru/swagger-ui/index.html, http://193.168.46.216:8081/swagger-ui/index.html
+https://cloud-file-storage.codeportfolio.ru/swagger-ui.html, http://193.168.46.216:8081/swagger-ui.html
 
 ## Как буду деплоить
 
@@ -160,30 +162,16 @@ ls -la /usr/local/tomcat/logs
 
 ### 3. Перенос на домен
 
-Добавиить настройку Caddy в docker-compose
+Добавиить настройку nginx в docker-compose
 
 ```yaml
-  caddy:
-    image: caddy:latest
-    container_name: caddy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - app
+  nginx-proxy:
+    
+  acme:
+
 ```
 
-docker сам скачает caddy в созданный им контейнер, а caddy сам получит SSL сертификат по записям в Caddyfile
-
-```Caddyfile
-codeportfolio.ru {
-    reverse_proxy app:8080
-}
-```
+acme сам получит SSL сертификат по переменным
 
 И после этого всё приложение будет доступно и по http://193.168.46.216:8081 (как по тз) и https://cloud-file-storage.codeportfolio.ru (https с SSL сертификатом)
 
