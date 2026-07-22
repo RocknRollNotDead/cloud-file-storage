@@ -69,13 +69,13 @@
 
 ## Swagger
 
-Также эта информация указана в swagger - https://codeportfolio.ru/cloud-file-storage/swagger-ui/index.html, http://193.168.46.216:8080/cloud-file-storage/swagger-ui/index.html
+Также эта информация указана в swagger - https://cloud-file-storage.codeportfolio.ru/swagger-ui/index.html, http://193.168.46.216:8080/swagger-ui/index.html
 
 ## Как буду деплоить
 
 ### 1. Зайти в Ubuntu
 
-- Арендовать vps сервер с Ubuntu (самый дешёвый) на одном из российских провайдеров - Beget Cloud, Timeweb Cloud, Selectel и др. Рекомендую [Beget](https://beget.com)
+- Арендовать vps сервер с Ubuntu (самый дешёвый) на одном из российских провайдеров - Beget Cloud, Timeweb Cloud, Selectel и др. Российские, такие, как [Beget](https://beget.com), не рекомендую.
 - Там будут данные для входа в виде ssh login@000.000.000.000 и password, где вместо login - выданный логин, вместо 0.0.0.0 выданный ip адрес, а вместо password - выданный пароль
 - Открыть командную строку БЕЗ имени администратора и ввести 'ssh login@000.000.000.000' * Enter * и потом password: 'mypassword' для захода в линукс терминал на сервере
 
@@ -103,12 +103,25 @@ services:
 volumes:
 ```
 
-**2.3 отправить проект на сервер**
+собрать образ 
 
 ```bash
-scp -r C:\Users\myuser\путь\cloud-file-storage root@000.000.0.000:~/
+docker build -t app .
+docker save -o app.tar app
+```
+
+**2.3 отправить образ на сервер**
+
+```bash
+scp -r C:\Users\myuser\путь\app.tar root@000.000.0.000:~/cloud-file-storage
 ```
 отправляет в директорию `пользователь/cloud-file-storage` на удалённом сервере
+
+распаковать образ на сервере
+
+```bash
+docker load -i app.tar
+```
 
 **2.4 запустить docker-compose**
 
@@ -118,16 +131,16 @@ docker compose up -d
 
 **2.5 исправление багов**
 
-(если поменять пару слов):
+посмотреть логи
+
 ```bash
-nano ~/cloud-file-storage/Dockerfile
-nano ~/cloud-file-storage/src/main/webapp/js/config.js
+docker logs name_folder-app-1
 ```
 
-(если больше):
+
 исправить на своём компьютере и в cmd не заходя на удалённый сервер отправить
 ```bash
-scp -r C:\Users\myuser\путь\cloud-file-storage\src\main\webapp\js\app.js root@000.000.0.000:~/cloud-file-storage/src/main/webapp/js/app.js
+scp -r docker-compose.yml root@000.000.0.000:~/cloud-file-storage/
 ```
 
 и потом на удалённом сервере 
@@ -172,7 +185,7 @@ codeportfolio.ru {
 }
 ```
 
-И после этого всё приложение будет доступно и по http://193.168.46.216:8080/cloud-file-storage (как по тз) и https://codeportfolio.ru/cloud-file-storage (https с SSL сертификатом)
+И после этого всё приложение будет доступно и по http://193.168.46.216:8081 (как по тз) и https://cloud-file-storage.codeportfolio.ru (https с SSL сертификатом)
 
 
 ## О том, что планирую изучить на этом проекте
