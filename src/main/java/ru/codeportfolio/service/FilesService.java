@@ -276,7 +276,6 @@ public class FilesService {
         String folderName = getFolderName(userId);
 
         if (!repository.isFolderExist(folderName)) {
-            log.info("Создаётся папка " + folderName);
             repository.createFolder(folderName);
         }
 

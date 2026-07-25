@@ -17,12 +17,10 @@ import ru.codeportfolio.model.User;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final FilesRepository filesRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, FilesRepository filesRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.filesRepository = filesRepository;
         this.passwordEncoder = passwordEncoder;
     }
 

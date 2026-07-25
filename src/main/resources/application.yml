@@ -1,11 +1,9 @@
 server:
   port: 8081
-  servlet:
-    session:
-      timeout: 7d # default 30m
 spring:
   session:
     store-type: redis
+    timeout: 7d
 
   servlet:
     multipart:
@@ -13,7 +11,7 @@ spring:
       max-request-size: 50MB
 
   datasource:
-    url: jdbc:${DB_SQL_NAME}://${DB_URL:db:3306/mydb}
+    url: jdbc:${DB_SQL_NAME:mariadb}://${DB_URL:db:3306/mydb}
     # todo поменять на постгрес
     username: ${DB_LOGIN}
     password: ${DB_PASSWORD}
@@ -26,13 +24,13 @@ spring:
       ddl-auto: update
 
   minio:
-    endpoint: http://${MINIO_SERVICE_NAME:minio}:9010
+    endpoint: http://${LOCALHOST:minio}:9010
     access-key: admin
     secret-key: ${MINIO_PASSWORD:admin123}
-    bucket: user-bucket
+    bucket: user-files
 
 
   data:
     redis:
-      host: ${REDIS_HOST:redis}
+      host: ${LOCALHOST:redis}
       port: 6379

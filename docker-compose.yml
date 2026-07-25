@@ -16,12 +16,6 @@ services:
     ports:
       - "${DB_PORT}:${DB_PORT}"
 
-    healthcheck:
-      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
 #  app:
 #    container_name: myapp
 #    build: .
@@ -41,7 +35,7 @@ services:
     image: redis:8
     command: redis-server --appendonly yes
     ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
+      - "6379:6379"
 
     volumes:
       - redis-data:/data
