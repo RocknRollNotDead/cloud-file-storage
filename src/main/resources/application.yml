@@ -11,11 +11,11 @@ spring:
       max-request-size: 50MB
 
   datasource:
-    url: jdbc:${DB_SQL_NAME:mariadb}://${DB_URL:db:3306/mydb}
+    url: jdbc:postgresql://${LOCALHOST:mydb}:5432/cloud_db
     # todo поменять на постгрес
     username: ${DB_LOGIN}
     password: ${DB_PASSWORD}
-    driver-class-name: org.mariadb.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
     hikari:
       minimum-idle: 1
   jpa:

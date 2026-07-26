@@ -48,7 +48,6 @@ public class FilesService {
         }
         path = handleRequestAndReturnPath(path, username);
         repository.createFolder(path);
-        log.info("вызывается create напрямую");
         ResourceResponseDto resourceDto = ResourceMapper.mapFolder(path);
         return new CreateFolderResponseDto(resourceDto.path(),
                 resourceDto.name(),
@@ -59,7 +58,6 @@ public class FilesService {
     public List<ResourceResponseDto> getFolder(String path, String username) {
 
         path = handleRequestAndReturnPath(path, username);
-        log.info(path);
 
         if (!isFolder(path)) {
             throw new ValidationException("This is no folder, this is file " + path);
@@ -79,7 +77,7 @@ public class FilesService {
     public List<ResourceResponseDto> upload(String path, String username, List<MultipartFile> files) {
         path = handleRequestAndReturnPath(path, username);
         List<ResourceResponseDto> result = new ArrayList<>();
-        log.info(String.valueOf(files.size()));
+        log.info("%s upload %d".formatted(username, files.size()));
         String filePath;
 
         if (checkGigabyte(username)) {
