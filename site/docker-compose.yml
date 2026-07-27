@@ -1,0 +1,146 @@
+
+
+# это файл, который я отправляю на сервер
+services:
+
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+    depends_on:
+      app-cloud:
+        condition: service_healthy
+
+  acme-companion:
+    image: nginxproxy/acme-companion
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+  
+
+  tomcat-app:
+    image: tomcat-app:latest
+    environment:
+      DB_URL: mydb:5432/mydb
+      DB_LOGIN: postgres
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      DB_PATH: /var/lib/currency-exchange/database.db
+
+      VIRTUAL_HOST: codeportfolio.ru
+      VIRTUAL_PORT: 8080
+      VIRTUAL_PATH: /
+      LETSENCRYPT_HOST: codeportfolio.ru
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+
+
+    depends_on:
+      mydb:
+        condition: service_healthy
+    expose:
+      - "8080"
+    volumes:
+      - sqlite-data:/var/lib/currency-exchange
+
+  mydb:
+    image: postgres:16
+    container_name: mydb
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+
+
+
+
+
+  app-cloud:
+    image: ghcr.io/rocknrollnotdead/cloud-file-storage:latest
+    env_file:
+      - ./cloud-file-storage/.env
+    environment:
+      DB_URL: mydb:5432/cloud_db
+      REDIS_HOST: redis
+    depends_on:
+      mydb:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/" ]
+      start_period: 40s
+    expose:
+      - "8081"
+
+  frontend:
+    image: ghcr.io/rocknrollnotdead/cloud-storage-frontend:latest
+    environment:
+      VIRTUAL_HOST: cloud-file-storage.codeportfolio.ru
+      VIRTUAL_PORT: 80
+      LETSENCRYPT_HOST: cloud-file-storage.codeportfolio.ru
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+
+    ports:
+      - "8080:80"
+
+
+
+  redis:
+    container_name: redis
+    image: redis:8
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+
+  minio:
+    # Используемый образ Docker. Рекомендуется указывать конкретный тег для стабильности.
+    image: minio/minio:RELEASE.2024-04-18T19-09-19Z
+    container_name: s3
+    command: server /data --address ":9010" --console-address ":9011"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: ${PASSWORD}
+
+    expose:
+      - "9010"
+      - "9011"
+    volumes:
+      - minio-data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 1024m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+
+  pgdata:
+  sqlite-data:
+  redis-data:
+  minio-data:
+
+  certs:
+  vhost:
+  html:
+  acme:

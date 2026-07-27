@@ -35,6 +35,7 @@
 **GET `/user/me`** — текущий авторизованный пользователь
 
 (доступно только администратору:)
+
 **GET `/admin-panel/users`** — список всех пользователей с обьемом их файлов
 **DELETE `/admin-panel/users/{id}`** — удалить файлы пользователя
 
@@ -167,7 +168,7 @@ ls -la /usr/local/tomcat/logs
 
 ### 3. Перенос на домен
 
-Добавиить настройку nginx в docker-compose
+Добавить настройку nginx в docker-compose
 
 ```yaml
   nginx-proxy:
