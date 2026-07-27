@@ -12,7 +12,6 @@ spring:
 
   datasource:
     url: jdbc:postgresql://${LOCALHOST:mydb}:5432/cloud_db
-    # todo поменять на постгрес
     username: ${DB_LOGIN}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
