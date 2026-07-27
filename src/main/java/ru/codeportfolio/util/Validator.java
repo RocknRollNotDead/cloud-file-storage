@@ -3,6 +3,8 @@ package ru.codeportfolio.util;
 import ru.codeportfolio.exception.ValidationException;
 
 public final class Validator {
+    private final static int minLengthPassword = 5;
+
     private Validator() {
     }
 
@@ -11,6 +13,16 @@ public final class Validator {
             throw new ValidationException("Error to validation username. Your username = \"%s\"".formatted(username));
         }
         return username.trim();
+    }
+
+    public static String validatePassword(String password) {
+        if (password == null || password.isBlank()) {
+            throw new ValidationException("Error to validation password. Your password = \"%s\"".formatted(password));
+        }
+        if (password.length() < minLengthPassword){
+            throw new ValidationException("Password length must be more than %d symbols".formatted(minLengthPassword));
+        }
+        return password.trim();
     }
 
     public static String validatePath(String path) {

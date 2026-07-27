@@ -11,6 +11,7 @@ import ru.codeportfolio.exception.AlreadyExistException;
 import ru.codeportfolio.exception.NotFoundException;
 import ru.codeportfolio.model.Role;
 import ru.codeportfolio.model.User;
+import ru.codeportfolio.util.Validator;
 
 @Transactional
 @Service
@@ -26,7 +27,9 @@ public class UserService {
 
 
     public UserDto createUser(String username, String password) {
-        // todo validation
+
+        username = Validator.validateUsername(username);
+        password = Validator.validatePassword(password);
 
         password = passwordEncoder.encode(password);
         User user;
@@ -41,6 +44,9 @@ public class UserService {
     }
 
     public UserDto getInfo(String username) {
+
+        Validator.validateUsername(username);
+
         User user = userRepository.findUsersByLogin(username).orElseThrow(
                 () -> new NotFoundException("user %s not found".formatted(username)));
 

@@ -36,6 +36,10 @@ public class AuthController {
                                          HttpServletResponse response,
                                          @RequestBody(required = false) RequestAuthDto req) {
 
+        if (req == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         req.username(),
@@ -69,15 +73,5 @@ public class AuthController {
 
         UserDto userDto = service.createUser(req.username(), req.password());
         return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
-
-        // сделать автоматический лог ин
     }
-
-/*    @PostMapping("/sign-out")
-    public ResponseEntity logOut() {
-        service.logOut();
-        return ResponseEntity.noContent().build();
-    }*/
-
-
 }

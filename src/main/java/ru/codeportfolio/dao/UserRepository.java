@@ -10,9 +10,6 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    @Override
-    <S extends User> boolean exists(Example<S> example);
-
     Optional<User> findUsersByLogin(String login);
 
 }

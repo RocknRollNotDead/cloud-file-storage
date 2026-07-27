@@ -43,10 +43,10 @@ public class FilesService {
 
     // папки /directory - 1C, 1R
     public CreateFolderResponseDto createFolder(String path, String username) {
+        path = handleRequestAndReturnPath(path, username);
         if (!isFolder(path)) {
             throw new ValidationException("This is no folder, this is file " + path);
         }
-        path = handleRequestAndReturnPath(path, username);
         repository.createFolder(path);
         ResourceResponseDto resourceDto = ResourceMapper.mapFolder(path);
         return new CreateFolderResponseDto(resourceDto.path(),
@@ -111,9 +111,6 @@ public class FilesService {
         return result;
     }
 
-    private boolean checkGigabyte(String username) {
-        return repository.getSize(handleRequestAndReturnPath("", username)) > 1_000_000_000L;
-    }
 
 
     public ResourceResponseDto getInfo(String path, String username) {
@@ -150,7 +147,6 @@ public class FilesService {
         return ResourceMapper.mapResourcesInFolder(repository.search(query));
 
     }
-
 
     public ResourceResponseDto move(String from, String to, String username) {
 
@@ -290,5 +286,8 @@ public class FilesService {
 
     }
 
+    private boolean checkGigabyte(String username) {
+        return repository.getSize(handleRequestAndReturnPath("", username)) > 1_000_000_000L;
+    }
 
 }

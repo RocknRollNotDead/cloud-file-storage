@@ -14,11 +14,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-#    volumes:
-#      - db_data:/var/lib/mysql
 
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "5432:5432"
 
 #  app:
 #    container_name: myapp

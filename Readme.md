@@ -4,13 +4,13 @@
 Шестой учебный проект из [роадмапа Сергея Жукова](https://zhukovsd.github.io/java-backend-learning-course/).
 [ТЗ проекта](https://zhukovsd.github.io/java-backend-learning-course/projects/cloud-file-storage/).
 
-Будет задеплоен на http://193.168.46.216:8081 и https://cloud-file-storage.codeportfolio.ru/
+Задеплоен на http://193.168.46.216:8081 и https://cloud-file-storage.codeportfolio.ru/
 
 ## Стек и структура
 
 **Backend**
 
-- REST API на Spring Boot со Spring Security, а в качестве хранения используются mariaDB (MySQL), Redis и minIO (S3)
+- REST API на Spring Boot со Spring Security, а в качестве хранения используются postgresql, Redis и minIO (S3)
 
 **Frontend** — [взят со страницы с проектом](https://github.com/zhukovsd/cloud-storage-frontend), автор Сергей Жуков.
 
@@ -33,6 +33,11 @@
 #### Пользователи
 
 **GET `/user/me`** — текущий авторизованный пользователь
+
+(доступно только администратору:)
+**GET `/admin-panel/users`** — список всех пользователей с обьемом их файлов
+**DELETE `/admin-panel/users/{id}`** — удалить файлы пользователя
+
 
 ---
 
@@ -176,6 +181,6 @@ acme сам получит SSL сертификат по переменным
 И после этого всё приложение будет доступно и по http://193.168.46.216:8081 (как по тз) и https://cloud-file-storage.codeportfolio.ru (https с SSL сертификатом)
 
 
-## О том, что планирую изучить на этом проекте
+## О том, что изучил на этом проекте
 
 Spring Boot, Spring Security, Spring Data Jpa, работу с Redis, S3, gradle, Swagger и интеграционные тесты.
