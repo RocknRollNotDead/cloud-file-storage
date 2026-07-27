@@ -85,7 +85,7 @@ public class SecurityConfig {
                 return org.springframework.security.core.userdetails.User
                         .withUsername(username)
                         .password(user.getPassword())
-                        .authorities(user.getRole())
+                        .authorities(user.getRole().getAuthority())
                         .build();
             }
         };
