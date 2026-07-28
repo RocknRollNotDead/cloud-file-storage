@@ -34,8 +34,13 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.8'
     testImplementation 'org.testcontainers:postgresql:1.19.8'
+    testImplementation 'org.springframework.security:spring-security-test'
 
 
+}
+
+test {
+    useJUnitPlatform()
 }
 
 bootJar {
