@@ -11,6 +11,7 @@ spring:
       max-request-size: 50MB
 
   datasource:
+    # я вынес это в разные application, но моё решение с переменной localhost мне кажется изящнее
     url: jdbc:postgresql://${LOCALHOST:mydb}:5432/cloud_db
     username: ${DB_LOGIN}
     password: ${DB_PASSWORD}

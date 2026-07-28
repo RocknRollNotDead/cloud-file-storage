@@ -39,10 +39,12 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/", "/index.html", "/config.js", "/favicon.ico",
-                                "/assets/**", "/error", "/login",
+                        .requestMatchers("/api/auth/**",
                                 "/v3/api-docs/**", "/swagger-ui/**", "/v3/api-docs.yaml",
                                 "/api/v3/api-docs/**", "/swagger-ui.html"
+                                // нужное только для раздачи статики, для фронтенда не нужно.
+//                              ,  "/", "/index.html", "/config.js", "/favicon.ico",
+//                                "/assets/**", "/error", "/login"
                                 ).permitAll()
                         .anyRequest().authenticated()
                 )

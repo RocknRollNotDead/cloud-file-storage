@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cloud_db
+  minio:
+    endpoint: http://localhost:9010
+  data:
+    redis:
+      host: localhost
