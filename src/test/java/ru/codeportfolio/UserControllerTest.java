@@ -46,25 +46,6 @@ class UserControllerTest extends IntegrationTestBase {
     }
 
     @Test
-    void shouldGetUserInfo() throws Exception {
-
-
-        mockMvc.perform(post("/api/auth/sign-up")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username").value(Alice));
-
-        mockMvc.perform(get("/api/user/me")
-                        .with(user(Alice).roles("USER"))
-                )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value(Alice));
-
-        assertThat(userRepository.findUsersByLogin(Alice)).isPresent();
-    }
-
-    @Test
     void shouldCreateUser() throws Exception {
 
 
@@ -96,6 +77,27 @@ class UserControllerTest extends IntegrationTestBase {
         assertThat(userRepository.findUsersByLogin(Alice)).isPresent();
     }
 
+
+
+    @Test
+    void shouldGetUserInfo() throws Exception {
+
+
+        mockMvc.perform(post("/api/auth/sign-up")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.username").value(Alice));
+
+        mockMvc.perform(get("/api/user/me")
+                        .with(user(Alice).roles("USER"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(Alice));
+
+        assertThat(userRepository.findUsersByLogin(Alice)).isPresent();
+    }
+
     @Test
     void shouldReturn401WhenUserNotAuth() throws Exception {
         mockMvc.perform(get("/api/user/me"))
@@ -120,6 +122,7 @@ class UserControllerTest extends IntegrationTestBase {
     void shouldReturn403WhenUserWantDeleteUserFromAdminPanel() throws Exception {
 
         mockMvc.perform(post("/api/auth/sign-up")
+
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json));
 
@@ -129,8 +132,41 @@ class UserControllerTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.message").exists());
     }
 
-    //todo обработать исключения
 
 
+    @Test
+    void shouldLogIn() throws Exception {
+        mockMvc.perform(post("/api/auth/sign-up")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json));
 
+        mockMvc.perform(post("/api/auth/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(Alice));
+    }
+
+    @Test
+    void shouldNotLogIn() throws Exception {
+
+        mockMvc.perform(post("/api/auth/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isUnauthorized());
+    }
+
+
+    @Test
+    void shouldLogout() throws Exception {
+        mockMvc.perform(post("/api/auth/sign-out")
+                        .with(user("Alice").roles("USER")))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldNotLogout() throws Exception {
+        mockMvc.perform(post("/api/auth/sign-out"))
+                .andExpect(status().isUnauthorized());
+    }
 }
