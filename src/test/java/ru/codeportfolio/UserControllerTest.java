@@ -17,6 +17,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+// тест этих эндпоинтов
+// /auth/
+// /user/
+// /admin-panel/
+
 class UserControllerTest extends IntegrationTestBase {
 
     @Autowired
@@ -124,6 +129,7 @@ class UserControllerTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.message").exists());
     }
 
+    //todo обработать исключения
 
 
 
