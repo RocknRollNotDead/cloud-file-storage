@@ -86,8 +86,8 @@ services:
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8081/" ]
       start_period: 40s
-    expose:
-      - "8081"
+    ports:
+      - "8080:8081"
 
   frontend:
     image: ghcr.io/rocknrollnotdead/cloud-storage-frontend:latest
@@ -101,8 +101,8 @@ services:
       app-cloud:
         condition: service_healthy
 
-    ports:
-      - "80:80"
+    expose:
+      - "80"
 
 
 

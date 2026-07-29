@@ -9,6 +9,7 @@ import ru.codeportfolio.dao.func_interfaces.ConsumerThrowing;
 import ru.codeportfolio.dao.func_interfaces.FunctionThrowing;
 import ru.codeportfolio.exception.DataAccessException;
 import ru.codeportfolio.exception.NotFoundException;
+import ru.codeportfolio.exception.NotFoundResourceException;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -39,6 +40,8 @@ public class MyMinioTransactionManager {
             } else {
                 throw new RuntimeException("MinIO вернул ошибку: " + e.getMessage(), e);
             }
+        } catch (NotFoundResourceException e){
+            throw new NotFoundException("Не нашёлся ресурс ");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

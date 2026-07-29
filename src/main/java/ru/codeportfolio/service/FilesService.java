@@ -48,12 +48,22 @@ public class FilesService {
         if (!isFolder(path)) {
             throw new ValidationException("This is no folder, this is file " + path);
         }
+        if(repository.isFolderExist(path)){
+            throw new AlreadyExistException("Folder with this name already exist!");
+        }
+
+        if(!isExistParentalFolder(path)){
+            System.err.println(path);
+            throw new NotFoundException("Parental folder not exist!");
+        }
+
         repository.createFolder(path);
         ResourceResponseDto resourceDto = ResourceMapper.mapFolder(path);
         return new CreateFolderResponseDto(resourceDto.path(),
                 resourceDto.name(),
                 resourceDto.type());
     }
+
 
 
     public List<ResourceResponseDto> getFolder(String path, String username) {
@@ -160,9 +170,15 @@ public class FilesService {
         from = handleRequestAndReturnPath(from, username);
         to = handleRequestAndReturnPath(to, username);
         if (isFolder(from) && isFolder(to)) {
+            if (repository.isFolderExist(to)){
+                throw new AlreadyExistException("Target folder already exist!");
+            }
             repository.moveFolder(from, to);
             return ResourceMapper.mapFolder(to);
         } else if (!isFolder(from) && !isFolder(to)) {
+            if (repository.isFileExist(to)){
+                throw new AlreadyExistException("Target file already exist!");
+            }
             repository.moveFile(from, to);
             return ResourceMapper.mapResource(repository.getInfoFile(to));
         } else {
@@ -235,9 +251,16 @@ public class FilesService {
         return path.charAt(path.length() - 1) == '/';
     }
 
+    private boolean isExistParentalFolder(String path) {
+        String[] folders = path.split("/");
+        String fileName = folders[folders.length - 1];
+        String folderParentName = path.substring(0, path.length() - (fileName.length() + 1));
+
+
+        return repository.isFolderExist(folderParentName);
+    }
+
     private String getPath(Long userId, String path) {
-
-
         return "%s/%s".formatted(
                 getFolderName(userId),
                 path

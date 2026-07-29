@@ -89,11 +89,11 @@ class MinioControllerTest extends IntegrationTestBase {
 
     // скачать ресурс не найден
     @Test
-    void shouldNotDownload() throws Exception {
-        makePostRequestWithPath(API_DIRECTORY, "docs00/")
+    void shouldNotDownload_() throws Exception {
+        makePostRequestWithPath(API_DIRECTORY, "docs232/")
                 .andExpect(status().isCreated());
 
-        makeGetRequestWithPath("/api/resource/download","docs00/test.txt")
+        makeGetRequestWithPath("/api/resource/download","docs232/test.txt")
                 .andExpect(status().isNotFound());
     }
 
@@ -114,7 +114,7 @@ class MinioControllerTest extends IntegrationTestBase {
     }
 
     @Test
-    void getInfoFile() throws Exception {
+    void getInfoFile_() throws Exception {
         makePostRequestWithPath(API_DIRECTORY, "docs12/")
                 .andExpect(status().isCreated());
 
@@ -304,15 +304,15 @@ class MinioControllerTest extends IntegrationTestBase {
     @Test
     void shouldBeNotSearch() throws Exception {
 
-        makePostRequestWithPath(API_DIRECTORY, "docs7/")
+        makePostRequestWithPath(API_DIRECTORY, "docs7_1/")
 
                 .andExpect(status().isCreated());
 
-        makePostRequestWithPath(API_DIRECTORY, "docs7/1/")
+        makePostRequestWithPath(API_DIRECTORY, "docs7_1/1/")
 
                 .andExpect(status().isCreated());
 
-        makePostRequestWithPath(API_DIRECTORY, "docs7/2/")
+        makePostRequestWithPath(API_DIRECTORY, "docs7_1/2/")
 
                 .andExpect(status().isCreated());
 
@@ -374,6 +374,35 @@ class MinioControllerTest extends IntegrationTestBase {
 
                 .andExpect(status().isConflict());
 
+    }
+
+
+    @Test
+    void getFolder() throws Exception {
+
+        makePostRequestWithPath(API_DIRECTORY, "docs9/")
+
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.path").value("/"))
+                .andExpect(jsonPath("$.name").value("docs9"));
+
+        makePostRequestWithPath(API_DIRECTORY, "docs9/1/")
+
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.path").value("/docs9/"))
+                .andExpect(jsonPath("$.name").value("1"));
+
+        makeGetRequestWithPath(API_DIRECTORY, "docs9/")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].path").value("/docs9/"))
+                .andExpect(jsonPath("$[0].name").value("1"));
+    }
+
+    @Test
+    void notGetFolder() throws Exception {
+        makeGetRequestWithPath(API_DIRECTORY, "docs91/")
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").exists());
     }
 
 

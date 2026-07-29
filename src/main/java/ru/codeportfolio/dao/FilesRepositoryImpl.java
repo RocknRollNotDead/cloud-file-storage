@@ -6,9 +6,9 @@ import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
-import ru.codeportfolio.dto.db.FileDownloadDto;
 import ru.codeportfolio.dto.db.FileDto;
 import ru.codeportfolio.exception.DataAccessException;
+import ru.codeportfolio.exception.NotFoundResourceException;
 import ru.codeportfolio.model.TypeFile;
 
 import java.io.ByteArrayInputStream;
@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
@@ -69,6 +70,10 @@ public class FilesRepositoryImpl implements FilesRepository {
 
             StatObjectResponse response = getStatResponse(to, client);
 
+            if(response.object().isBlank()){
+                throw new NotFoundResourceException();
+            }
+
             return new FileDto(
                     response.object(),
                     response.size(),
@@ -90,6 +95,8 @@ public class FilesRepositoryImpl implements FilesRepository {
     @Override
     public void createFolder(String path) {
         manager.executeInTransactionWithoutReturn(client -> {
+
+
             client.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
@@ -136,6 +143,10 @@ public class FilesRepositoryImpl implements FilesRepository {
         manager.executeInTransactionWithoutReturn(client ->
         {
             Iterable<Result<Item>> objects = getListItems(client, from, true);
+
+            if(!objects.iterator().hasNext()){
+                throw new NotFoundResourceException();
+            }
 
             for (Result<Item> result : objects) {
                 String oldName = result.get().objectName();
@@ -188,12 +199,16 @@ public class FilesRepositoryImpl implements FilesRepository {
     public boolean isFolderExist(String folderName) {
         return manager.executeAction(client ->
         {
-            if (client.listObjects(
+
+            Iterable<Result<Item>> results = client.listObjects(
                     ListObjectsArgs.builder()
                             .bucket(bucketName)
                             .prefix(folderName)
                             .recursive(true)  // false = только прямые "дети", true = вообще всё рекурсивно
-                            .build()).iterator().hasNext()) {
+                            .build());
+            Iterator<Result<Item>> iterator = results.iterator();
+            boolean hasItem = iterator.hasNext();
+            if (hasItem) {
                 return true;
             } else {
                 return false;
