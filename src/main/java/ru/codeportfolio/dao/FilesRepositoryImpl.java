@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import ru.codeportfolio.dto.db.FileDownloadDto;
 import ru.codeportfolio.dto.db.FileDto;
+import ru.codeportfolio.exception.DataAccessException;
 import ru.codeportfolio.model.TypeFile;
 
 import java.io.ByteArrayInputStream;
@@ -86,20 +87,6 @@ public class FilesRepositoryImpl implements FilesRepository {
 
     }
 
-
-    public byte[] getFile(String path) {
-        return manager.executeAction(client ->
-        {
-            return client.getObject(
-                    GetObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(path)
-                            .build()).readAllBytes();
-
-        });
-    }
-
-
     @Override
     public void createFolder(String path) {
         manager.executeInTransactionWithoutReturn(client -> {
@@ -111,35 +98,6 @@ public class FilesRepositoryImpl implements FilesRepository {
                             .build());
         });
     }
-
-    public List<FileDownloadDto> getFolder(String path) {
-        return manager.executeAction(client -> {
-            List<FileDownloadDto> result = new ArrayList<>();
-
-            Iterable<Result<Item>> objects = getListItems(client, path, true);
-
-            for (Result<Item> res : objects) {
-                try {
-                    Item item = res.get();
-
-                    try (InputStream stream = client.getObject(
-                            GetObjectArgs.builder()
-                                    .bucket(bucketName)
-                                    .object(item.objectName())
-                                    .build())) {
-
-                        result.add(new FileDownloadDto(item.objectName(), stream.readAllBytes()));
-                    }
-
-                } catch (Exception e) {
-                    throw new RuntimeException("Ошибка чтения файлов из папки: " + path, e);
-                }
-            }
-
-            return result;
-        });
-    }
-
 
     public InputStream getFiles(String objectName) {
 
@@ -241,8 +199,24 @@ public class FilesRepositoryImpl implements FilesRepository {
                 return false;
             }
         });
-
     }
+
+
+    public boolean isFileExist(String fileName) {
+        return manager.executeAction(client -> {
+            try {
+                getStatResponse(fileName, client);
+                return true;
+            } catch (ErrorResponseException e) {
+                if (e.errorResponse().code().equals("NoSuchKey")) {
+                    return false;
+                }
+                throw new DataAccessException(e);
+            }
+        });
+    }
+
+
 
 
     private StatObjectResponse getStatResponse(String path, MinioClient client) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {

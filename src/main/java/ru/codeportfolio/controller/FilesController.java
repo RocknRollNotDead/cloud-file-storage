@@ -78,16 +78,11 @@ public class FilesController {
     @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
     @ApiResponse(responseCode = "404", description = "Ресурс не найден")
     @GetMapping("/download")
-    public /*ResponseEntity<byte[]>*/ void downloadResource(@RequestParam String path,
+    public void downloadResource(@RequestParam String path,
                                                             HttpServletResponse response,
                                                             @AuthenticationPrincipal UserDetails principal) throws IOException {
-     /*   byte[] result = service.getResource(path);
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(result);
-*/
-        response.setContentType("application/zip");
+        response.setContentType("application/octet-stream");
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment");// filename="archive.zip"
 
         service.getResource(path, response.getOutputStream(), principal.getUsername());

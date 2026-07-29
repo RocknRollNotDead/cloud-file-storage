@@ -12,6 +12,7 @@ import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.dto.CreateFolderResponseDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
 import ru.codeportfolio.dto.UsersSizeDto;
+import ru.codeportfolio.exception.AlreadyExistException;
 import ru.codeportfolio.exception.DataAccessException;
 import ru.codeportfolio.exception.NotFoundException;
 import ru.codeportfolio.exception.ValidationException;
@@ -84,6 +85,8 @@ public class FilesService {
             throw new ValidationException("You're running low on disk space. Buy yourself a hard drive.");
         }
 
+
+
         for (MultipartFile file : files) {
             if (file == null) {
                 continue;
@@ -94,6 +97,10 @@ public class FilesService {
             }
 
             filePath = path + file.getOriginalFilename();
+
+            if(repository.isFileExist(filePath)){
+                throw new AlreadyExistException("This file %s already exist".formatted(file.getOriginalFilename()));
+            }
             try {
                 repository.saveFile(
                         filePath,
@@ -104,7 +111,7 @@ public class FilesService {
                 log.info(filePath);
                 result.add(ResourceMapper.mapResource(repository.getInfoFile(filePath)));
             } catch (IOException e) {
-                throw new DataAccessException("Ошибка сохранения файла");
+                throw new DataAccessException("Error to save file");
             }
 
         }
@@ -211,13 +218,16 @@ public class FilesService {
     private void streamFile(String path, OutputStream outputStream) {
         try {
             StatObjectResponse object = repository.getItem(path);
+
             try (InputStream fileStream = repository.getFiles(object.object())) {
 
                 fileStream.transferTo(outputStream);
             }
 
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Ошибка выдачи файла: " + path, e);
+            throw new RuntimeException("Ошибка выдачи файла! ", e);
         }
     }
 

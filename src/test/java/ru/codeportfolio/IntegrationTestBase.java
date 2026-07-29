@@ -22,6 +22,10 @@ public abstract class IntegrationTestBase {
     static GenericContainer<?> redis = new GenericContainer<>("redis:7")
             .withExposedPorts(6379);
 
+    @Container
+    static MinIOContainer minio = new MinIOContainer("minio/minio:RELEASE.2024-01-16T16-07-38Z")
+            .withUserName("minioadmin")
+            .withPassword("minioadmin");
 
 
     @DynamicPropertySource
@@ -32,5 +36,9 @@ public abstract class IntegrationTestBase {
 
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+
+        registry.add("spring.minio.endpoint", minio::getS3URL);
+        registry.add("spring.minio.access-key", minio::getUserName);
+        registry.add("spring.minio.secret-key", minio::getPassword);
     }
 }

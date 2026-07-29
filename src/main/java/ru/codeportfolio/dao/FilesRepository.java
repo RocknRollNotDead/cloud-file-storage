@@ -40,6 +40,8 @@ public interface FilesRepository {
 
     boolean isFolderExist(String folderName);
 
+    boolean isFileExist(String fileName);
+
 
     List<FileDto> search(String query);
 
