@@ -62,15 +62,6 @@ public class FilesController {
         return ResponseEntity.noContent().build();
     }
 
-    /*@GetMapping("/download")
-    public ResponseEntity<Resource> download(
-            @RequestParam String path) {
-
-        Resource resource = service.getResource(path);
-
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
-    }*/
-
 
     @Operation(summary = "Скачать ресурс")
     @ApiResponse(responseCode = "200", description = "Успешно начато скачивание")
@@ -83,7 +74,7 @@ public class FilesController {
                                                             @AuthenticationPrincipal UserDetails principal) throws IOException {
 
         response.setContentType("application/octet-stream");
-        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment");// filename="archive.zip"
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment");
 
         service.getResource(path, response.getOutputStream(), principal.getUsername());
 

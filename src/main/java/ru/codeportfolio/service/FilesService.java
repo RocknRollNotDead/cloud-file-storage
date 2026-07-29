@@ -53,7 +53,6 @@ public class FilesService {
         }
 
         if(!isExistParentalFolder(path)){
-            System.err.println(path);
             throw new NotFoundException("Parental folder not exist!");
         }
 
@@ -179,8 +178,8 @@ public class FilesService {
             if (repository.isFileExist(to)){
                 throw new AlreadyExistException("Target file already exist!");
             }
-            repository.moveFile(from, to);
-            return ResourceMapper.mapResource(repository.getInfoFile(to));
+            return ResourceMapper.mapResource(repository.moveFile(from, to));
+//            return ResourceMapper.mapResource(repository.getInfoFile(to));
         } else {
             throw new ValidationException("Path 1 and path 2 must be both folders or both files!");
         }
@@ -192,8 +191,14 @@ public class FilesService {
         path = handleRequestAndReturnPath(path, username);
 
         if (isFolder(path)) {
+            if(!repository.isFolderExist(path)){
+                throw new NotFoundException("Folder not found!");
+            }
             repository.deleteFolder(path);
         } else {
+            if(!repository.isFileExist(path)){
+                throw new NotFoundException("Folder not found!");
+            }
             repository.deleteFile(path);
         }
 
@@ -283,7 +288,7 @@ public class FilesService {
                     continue;
                 }
 
-                String entryName = item.objectName().substring(path.length()); // относительный путь внутри архива
+                String entryName = item.objectName().substring(path.length());
 
                 try (InputStream fileStream = repository.getFiles(item.objectName())) {
 

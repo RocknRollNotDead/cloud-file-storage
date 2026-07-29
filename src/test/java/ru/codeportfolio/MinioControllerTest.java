@@ -18,11 +18,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.model.Role;
 import ru.codeportfolio.model.User;
-import ru.codeportfolio.service.FilesService;
 
-//import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -73,6 +69,7 @@ class MinioControllerTest extends IntegrationTestBase {
     }
 
     // скачать
+
     @Test
     void shouldDownload() throws Exception {
         makePostRequestWithPath(API_DIRECTORY, "docs0/")
@@ -85,15 +82,17 @@ class MinioControllerTest extends IntegrationTestBase {
         makeGetRequestWithPath("/api/resource/download","docs0/test.txt")
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/octet-stream"));
-    }
+    } // для теста скачивания папки слишком много гемороя.
 
     // скачать ресурс не найден
     @Test
     void shouldNotDownload_() throws Exception {
-        makePostRequestWithPath(API_DIRECTORY, "docs232/")
+
+
+        makePostRequestWithPath(API_DIRECTORY, "docs00/")
                 .andExpect(status().isCreated());
 
-        makeGetRequestWithPath("/api/resource/download","docs232/test.txt")
+        makeGetRequestWithPath("/api/resource/download","docs00/test.txt")
                 .andExpect(status().isNotFound());
     }
 
@@ -132,12 +131,12 @@ class MinioControllerTest extends IntegrationTestBase {
     }
 
     @Test
-    void notGetInfoFile() throws Exception {
+    void notGetInfoFolder() throws Exception {
         makePostRequestWithPath(API_DIRECTORY, "docs13/")
                 .andExpect(status().isCreated());
 
 
-        makeGetRequestWithPath(API_RESOURCE,"docs13/test.txt")
+        makeGetRequestWithPath(API_RESOURCE,"docs13/1/")
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").exists())
         ;
@@ -145,8 +144,54 @@ class MinioControllerTest extends IntegrationTestBase {
 
 
 
+    @Test
+    void notGetInfoFile() throws Exception {
+        makePostRequestWithPath(API_DIRECTORY, "docs14/")
+                .andExpect(status().isCreated());
+
+
+        makeGetRequestWithPath(API_RESOURCE,"docs14/test.txt")
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").exists())
+        ;
+    }
+
+
+    // DELETE /resource
+    @Test
+    void deleteResource() throws Exception {
+        makePostRequestWithPath(API_DIRECTORY, "docs15/")
+                .andExpect(status().isCreated());
+
+        MockMultipartFile file = getMockMultipartFile();
+
+        uploadTestFile(file, "docs15/");
+
+        mockMvc.perform(delete("/api/resource")
+                .with(user("test-user").roles("USER"))
+                .param("path", "docs15/test.txt"))
+                .andExpect(status().isNoContent())
+        ;
+
+
+    }
+
+
+    @Test
+    void notDeleteResourceNotFound() throws Exception {
+        makePostRequestWithPath(API_DIRECTORY, "docs16/")
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/api/resource")
+                        .with(user("test-user").roles("USER"))
+                        .param("path", "docs16/test.txt"))
+                .andExpect(status().isNotFound());
+    }
+
+
 
     // переименовать
+
     @Test
     void shouldBeRename() throws Exception {
 
@@ -232,8 +277,6 @@ class MinioControllerTest extends IntegrationTestBase {
     }
 
 
-
-
     // переименовать ресурс не найден
 
     @Test
@@ -245,8 +288,6 @@ class MinioControllerTest extends IntegrationTestBase {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").exists());
     }
-
-
 
 
     // переименовать в уже существующую
@@ -299,7 +340,6 @@ class MinioControllerTest extends IntegrationTestBase {
     }
 
     // поиск неудачный
-
 
     @Test
     void shouldBeNotSearch() throws Exception {
