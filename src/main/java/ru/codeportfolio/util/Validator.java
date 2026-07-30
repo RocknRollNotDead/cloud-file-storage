@@ -38,6 +38,9 @@ public final class Validator {
         if (!path.isBlank() && path.charAt(0) == '/') {
             path = path.substring(1);
         }
+        if (path.contains("//")) {
+            throw new ValidationException("Invalid path. Path contain \"//\"");
+        }
         // если в тз добавится запрет определенных символов, то я буду валидировать их именно здесь.
         return path.trim();
     }

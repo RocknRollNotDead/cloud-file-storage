@@ -432,9 +432,9 @@ class MinioControllerTest extends IntegrationTestBase {
     @Test
     void createFolderWithSymbol() throws Exception {
 
-        makePostRequestWithPath(API_DIRECTORY, "do/cs/")
+        makePostRequestWithPath(API_DIRECTORY, "docs//")
 
-                .andExpect(status().isNotFound())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").exists());
     }
 
