@@ -23,9 +23,9 @@ public class UsersDbInitializer implements CommandLineRunner {
         String login = System.getenv("DB_LOGIN");
         if (userRepository.findUsersByLogin(login).isEmpty()) {
             userRepository.save(new User(
-                    login,
-                    passwordEncoder.encode(System.getenv("DB_PASSWORD")),
-                    Role.ADMIN
+                            login,
+                            passwordEncoder.encode(System.getenv("DB_PASSWORD")),
+                            Role.ADMIN
                     )
             );
         }

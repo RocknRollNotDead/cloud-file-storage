@@ -3,7 +3,6 @@ package ru.codeportfolio.config;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,7 +13,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import ru.codeportfolio.dao.UserRepository;
-import ru.codeportfolio.model.Role;
 import ru.codeportfolio.model.User;
 import tools.jackson.databind.ObjectMapper;
 
@@ -39,37 +37,37 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**",
-                                "/v3/api-docs/**", "/swagger-ui/**", "/v3/api-docs.yaml",
-                                "/api/v3/api-docs/**", "/swagger-ui.html"
-                                // нужное только для раздачи статики, для фронтенда не нужно.
+                                .requestMatchers("/api/auth/**",
+                                        "/v3/api-docs/**", "/swagger-ui/**", "/v3/api-docs.yaml",
+                                        "/api/v3/api-docs/**", "/swagger-ui.html"
+                                        // нужное только для раздачи статики, для фронтенда не нужно.
 //                              ,  "/", "/index.html", "/config.js", "/favicon.ico",
 //                                "/assets/**", "/error", "/login"
                                 ).permitAll()
-                        .anyRequest().authenticated()
+                                .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
-                                .authenticationEntryPoint((request, response, authException) -> {
-                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                                    response.setContentType("application/json");
-                                    response.getWriter().write(
-                                            objectMapper.writeValueAsString(
-                                                    buildResponse(
-                                                            "User not authorized!"
-                                                    )));
-                                })
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write(
+                                    objectMapper.writeValueAsString(
+                                            buildResponse(
+                                                    "User not authorized!"
+                                            )));
+                        })
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/api/auth/sign-out")
-                        .logoutSuccessHandler((
-                                request, response, authentication) -> {
-                            if (authentication == null){
-                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            } else {
-                                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                            }
+                                .logoutUrl("/api/auth/sign-out")
+                                .logoutSuccessHandler((
+                                        request, response, authentication) -> {
+                                    if (authentication == null) {
+                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                    } else {
+                                        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                                    }
 
-                        })
+                                })
 //                        .permitAll()
                 );
 

@@ -12,10 +12,8 @@ import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.dto.CreateFolderResponseDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
 import ru.codeportfolio.dto.UsersSizeDto;
-import ru.codeportfolio.exception.AlreadyExistException;
-import ru.codeportfolio.exception.DataAccessException;
-import ru.codeportfolio.exception.NotFoundException;
-import ru.codeportfolio.exception.ValidationException;
+import ru.codeportfolio.dto.db.FileDto;
+import ru.codeportfolio.exception.*;
 import ru.codeportfolio.model.User;
 import ru.codeportfolio.util.ResourceMapper;
 import ru.codeportfolio.util.Validator;
@@ -32,6 +30,8 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 public class FilesService {
 
+    public static final long MAX_SIZE_STORAGE_FOR_ONE_USER = 500_000_000L;
+    public static final long MEGABYTE = 1_000_000L;
     private final FilesRepository repository;
     private final UserRepository userRepository;
 
@@ -46,13 +46,13 @@ public class FilesService {
     public CreateFolderResponseDto createFolder(String path, String username) {
         path = handleRequestAndReturnPath(path, username);
         if (!isFolder(path)) {
-            throw new ValidationException("This is no folder, this is file " + path);
+            throw new ValidationException("This is no folder, this is file!");
         }
-        if(repository.isFolderExist(path)){
+        if (repository.isFolderExist(path)) {
             throw new AlreadyExistException("Folder with this name already exist!");
         }
 
-        if(!isExistParentalFolder(path)){
+        if (!isExistParentalFolder(path)) {
             throw new NotFoundException("Parental folder not exist!");
         }
 
@@ -64,20 +64,19 @@ public class FilesService {
     }
 
 
-
     public List<ResourceResponseDto> getFolder(String path, String username) {
 
         path = handleRequestAndReturnPath(path, username);
 
         if (!isFolder(path)) {
-            throw new ValidationException("This is no folder, this is file " + path);
+            throw new ValidationException("This is no folder, this is file!");
         }
 
         if (repository.isFolderExist(path)) {
 
             return ResourceMapper.mapResourcesInFolder(repository.getInfoFolder(path));
         } else {
-            throw new NotFoundException("Folder not found " + path);
+            throw new NotFoundException("Folder not found!");
         }
     }
 
@@ -87,38 +86,47 @@ public class FilesService {
     public List<ResourceResponseDto> upload(String path, String username, List<MultipartFile> files) {
         path = handleRequestAndReturnPath(path, username);
         List<ResourceResponseDto> result = new ArrayList<>();
-        log.info("%s upload %d".formatted(username, files.size()));
+        log.info("%s upload %d:".formatted(username, files.size()));
         String filePath;
 
-        if (checkGigabyte(username)) {
-            throw new ValidationException("You're running low on disk space. Buy yourself a hard drive.");
+        if (checkMemoryForHasHalfGigabyte(username)) {
+            double maxSize = (double) MAX_SIZE_STORAGE_FOR_ONE_USER / MEGABYTE;
+            throw new OutOfMemoryException(
+                    "You're running low on disk space. Buy yourself a hard drive. Max size your files - %f MB"
+                            .formatted(maxSize));
         }
 
-
+        StringBuilder filesNames = new StringBuilder();
 
         for (MultipartFile file : files) {
             if (file == null) {
                 continue;
             }
 
-            if (checkGigabyte(username)) {
-                throw new ValidationException("Error saving file - not enough space.");
+            if (checkMemoryForHasHalfGigabyte(username)) {
+                throw new ValidationException("Error saving file - not enough space. Was save files: " + filesNames);
             }
 
             filePath = path + file.getOriginalFilename();
 
-            if(repository.isFileExist(filePath)){
-                throw new AlreadyExistException("This file %s already exist".formatted(file.getOriginalFilename()));
+            if (repository.isFileExist(filePath)) {
+                throw new AlreadyExistException(
+                        "This file %s already exist. The download was interrupted. Was save files: %s"
+                                .formatted(file.getOriginalFilename(), filesNames));
             }
+
             try {
-                repository.saveFile(
+                FileDto fileDto = repository.saveFile(
                         filePath,
                         file.getInputStream(),
                         file.getSize(),
                         file.getContentType()
                 );
                 log.info(filePath);
-                result.add(ResourceMapper.mapResource(repository.getInfoFile(filePath)));
+                result.add(ResourceMapper.mapResource(fileDto));
+                filesNames
+                        .append(file.getOriginalFilename())
+                        .append("; ");
             } catch (IOException e) {
                 throw new DataAccessException("Error to save file");
             }
@@ -126,7 +134,6 @@ public class FilesService {
         }
         return result;
     }
-
 
 
     public ResourceResponseDto getInfo(String path, String username) {
@@ -142,7 +149,7 @@ public class FilesService {
 
             return ResourceMapper.mapFolder(path);
         } else {
-            throw new NotFoundException("Folder not found " + path);
+            throw new NotFoundException("Folder not found!");
         }
     }
 
@@ -150,7 +157,7 @@ public class FilesService {
         path = handleRequestAndReturnPath(path, username);
 
         if (isFolder(path)) {
-            zipFolder(path, outputStream);
+            streamFolderAsZipFile(path, outputStream);
         } else {
             streamFile(path, outputStream);
         }
@@ -169,17 +176,16 @@ public class FilesService {
         from = handleRequestAndReturnPath(from, username);
         to = handleRequestAndReturnPath(to, username);
         if (isFolder(from) && isFolder(to)) {
-            if (repository.isFolderExist(to)){
+            if (repository.isFolderExist(to)) {
                 throw new AlreadyExistException("Target folder already exist!");
             }
             repository.moveFolder(from, to);
             return ResourceMapper.mapFolder(to);
         } else if (!isFolder(from) && !isFolder(to)) {
-            if (repository.isFileExist(to)){
+            if (repository.isFileExist(to)) {
                 throw new AlreadyExistException("Target file already exist!");
             }
             return ResourceMapper.mapResource(repository.moveFile(from, to));
-//            return ResourceMapper.mapResource(repository.getInfoFile(to));
         } else {
             throw new ValidationException("Path 1 and path 2 must be both folders or both files!");
         }
@@ -191,12 +197,12 @@ public class FilesService {
         path = handleRequestAndReturnPath(path, username);
 
         if (isFolder(path)) {
-            if(!repository.isFolderExist(path)){
+            if (!repository.isFolderExist(path)) {
                 throw new NotFoundException("Folder not found!");
             }
             repository.deleteFolder(path);
         } else {
-            if(!repository.isFileExist(path)){
+            if (!repository.isFileExist(path)) {
                 throw new NotFoundException("Folder not found!");
             }
             repository.deleteFile(path);
@@ -204,12 +210,12 @@ public class FilesService {
 
     }
 
-    public void deleteById(Long id) {
+    public void deleteAllUserFilesByUserId(Long id) {
         if (id == null) {
             throw new ValidationException("Not found userId");
         }
 
-        String path = getPath(id, "");
+        String path = getUserPath(id, "");
         repository.deleteFolder(path);
 
     }
@@ -229,8 +235,6 @@ public class FilesService {
             } catch (RuntimeException e) {
                 continue;
             }
-
-
         }
         return result;
     }
@@ -248,38 +252,14 @@ public class FilesService {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Ошибка выдачи файла! ", e);
+            throw new RuntimeException("File output error! ", e);
         }
     }
 
-    private boolean isFolder(String path) {
-        return path.charAt(path.length() - 1) == '/';
-    }
-
-    private boolean isExistParentalFolder(String path) {
-        String[] folders = path.split("/");
-        String fileName = folders[folders.length - 1];
-        String folderParentName = path.substring(0, path.length() - (fileName.length() + 1));
-
-
-        return repository.isFolderExist(folderParentName);
-    }
-
-    private String getPath(Long userId, String path) {
-        return "%s/%s".formatted(
-                getFolderName(userId),
-                path
-        );
-    }
-
-    private String getFolderName(Long userId) {
-        return "user-%d-files".formatted(userId);
-    }
-
-    private void zipFolder(String path, OutputStream outputStream) {
+    private void streamFolderAsZipFile(String path, OutputStream outputStream) {
         try (ZipOutputStream zipOut = new ZipOutputStream(outputStream)) {
 
-            Iterable<Result<Item>> objects = repository.getItems(path);
+            Iterable<Result<Item>> objects = repository.getItemsFiles(path);
 
             for (Result<Item> res : objects) {
                 Item item = res.get();
@@ -299,9 +279,36 @@ public class FilesService {
             }
 
         } catch (Exception e) {
-            throw new RuntimeException("Ошибка архивации папки: " + path, e);
+            throw new RuntimeException("Archive folder error!", e);
         }
     }
+
+
+
+    private boolean isFolder(String path) {
+        return path.charAt(path.length() - 1) == '/';
+    }
+
+    private boolean isExistParentalFolder(String path) {
+        String[] folders = path.split("/");
+        String fileName = folders[folders.length - 1];
+        String folderParentName = path.substring(0, path.length() - (fileName.length() + 1));
+
+
+        return repository.isFolderExist(folderParentName);
+    }
+
+    private String getUserPath(Long userId, String path) {
+        return "%s/%s".formatted(
+                getFolderName(userId),
+                path
+        );
+    }
+
+    private String getFolderName(Long userId) {
+        return "user-%d-files".formatted(userId);
+    }
+
 
     private void createUserFolder(Long userId) {
 
@@ -320,12 +327,12 @@ public class FilesService {
         Long userId = userRepository.findUsersByLogin(username).orElseThrow(() -> new NotFoundException("User not found!")).getId();
         createUserFolder(userId);
 
-        return getPath(userId, path);
+        return getUserPath(userId, path);
 
     }
 
-    private boolean checkGigabyte(String username) {
-        return repository.getSize(handleRequestAndReturnPath("", username)) > 1_000_000_000L;
+    private boolean checkMemoryForHasHalfGigabyte(String username) {
+        return repository.getSize(handleRequestAndReturnPath("", username)) > MAX_SIZE_STORAGE_FOR_ONE_USER;
     }
 
 }

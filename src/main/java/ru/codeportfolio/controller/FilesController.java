@@ -70,8 +70,8 @@ public class FilesController {
     @ApiResponse(responseCode = "404", description = "Ресурс не найден")
     @GetMapping("/download")
     public void downloadResource(@RequestParam String path,
-                                                            HttpServletResponse response,
-                                                            @AuthenticationPrincipal UserDetails principal) throws IOException {
+                                 HttpServletResponse response,
+                                 @AuthenticationPrincipal UserDetails principal) throws IOException {
 
         response.setContentType("application/octet-stream");
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment");

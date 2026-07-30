@@ -4,6 +4,7 @@ import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.codeportfolio.dao.func_interfaces.ConsumerThrowing;
 import ru.codeportfolio.dao.func_interfaces.FunctionThrowing;
@@ -19,9 +20,11 @@ import java.security.NoSuchAlgorithmException;
 public class MyMinioTransactionManager {
 
     private final MinioClient minioClient;
+    private final String bucketName;
 
-    public MyMinioTransactionManager(MinioClient minioClient) {
+    public MyMinioTransactionManager(MinioClient minioClient, @Value("${spring.minio.bucket}") String bucketName) {
         this.minioClient = minioClient;
+        this.bucketName = bucketName;
     }
 
     public <T> T executeAction(FunctionThrowing<MinioClient, T> action) {
@@ -34,14 +37,13 @@ public class MyMinioTransactionManager {
             if ("NoSuchBucket".equals(e.errorResponse().code())) {
                 createBucket();
                 result = repeatAction(action);
-                // повторить действие
-            } else if ("NoSuchKey".equals(e.errorResponse().code())){
-                throw new NotFoundException("Файл не найден.");
+            } else if ("NoSuchKey".equals(e.errorResponse().code())) {
+                throw new NotFoundException("File not found.");
             } else {
-                throw new RuntimeException("MinIO вернул ошибку: " + e.getMessage(), e);
+                throw new RuntimeException("MinIO return error: " + e.getMessage(), e);
             }
-        } catch (NotFoundResourceException e){
-            throw new NotFoundException("Не нашёлся ресурс ");
+        } catch (NotFoundResourceException e) {
+            throw new NotFoundException("Not found resource.");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -49,8 +51,7 @@ public class MyMinioTransactionManager {
     }
 
 
-
-    public <T> void executeInTransactionWithoutReturn(ConsumerThrowing<MinioClient> action) {
+    public void executeInTransactionWithoutReturn(ConsumerThrowing<MinioClient> action) {
         executeAction(client -> {
             action.apply(client);
             return null;
@@ -61,17 +62,17 @@ public class MyMinioTransactionManager {
         T result;
         try {
             result = action.apply(minioClient);
-        } catch (Exception ex) {
-            throw new DataAccessException(ex);
+        } catch (Exception e) {
+            throw new DataAccessException(e);
         }
         return result;
     }
 
     private void createBucket() {
         try {
-            if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket("user-files").build())) {
+            if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
                 minioClient.makeBucket(
-                        MakeBucketArgs.builder().bucket("user-files").build());
+                        MakeBucketArgs.builder().bucket(bucketName).build());
             } else {
                 throw new DataAccessException("Error buckets");
             }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.codeportfolio.exception.AlreadyExistException;
 import ru.codeportfolio.exception.NotFoundException;
+import ru.codeportfolio.exception.OutOfMemoryException;
 import ru.codeportfolio.exception.ValidationException;
 
 import java.util.Map;
@@ -20,9 +21,7 @@ public class MyExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Map<String, String>> handleGeneric(NotFoundException e) {
-        log.debug("handle err 404");
         return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
-
     }
 
     @ExceptionHandler(AlreadyExistException.class)
@@ -50,6 +49,11 @@ public class MyExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> handleGeneric(AccessDeniedException e) {
         return buildResponse(HttpStatus.FORBIDDEN, "Access denied!!!");
+    }
+
+    @ExceptionHandler(OutOfMemoryException.class)
+    public ResponseEntity<Map<String, String>> handleGeneric(OutOfMemoryException e) {
+        return buildResponse(HttpStatus.INSUFFICIENT_STORAGE, e.getMessage());
     }
 
     @ExceptionHandler(RuntimeException.class)

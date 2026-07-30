@@ -12,7 +12,7 @@ public interface FilesRepository {
 
     // CRUD - files
 
-    void saveFile(String path, InputStream stream, long size, String contentType);
+    FileDto saveFile(String path, InputStream stream, long size, String contentType);
 
     FileDto getInfoFile(String path);
 
@@ -26,6 +26,7 @@ public interface FilesRepository {
     void createFolder(String path);
 
     List<FileDto> getInfoFolder(String path);
+    List<FileDto> search(String query);
 
     void moveFolder(String from, String to);
 
@@ -34,17 +35,16 @@ public interface FilesRepository {
 
     InputStream getFiles(String objectName);
 
-    Iterable<Result<Item>> getItems(String path);
+    StatObjectResponse getItem(String path);
+    Iterable<Result<Item>> getItemsFiles(String path);
 
     Long getSize(String path);
 
+
+    // вспомогательные
     boolean isFolderExist(String folderName);
 
     boolean isFileExist(String fileName);
 
 
-    List<FileDto> search(String query);
-
-
-    StatObjectResponse getItem(String path);
 }

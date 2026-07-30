@@ -33,9 +33,9 @@ public class FilesRepositoryImpl implements FilesRepository {
 
 
     @Override
-    public void saveFile(String path, InputStream stream, long size, String contentType) {
+    public FileDto saveFile(String path, InputStream stream, long size, String contentType) {
 
-        manager.executeInTransactionWithoutReturn(client ->
+        return manager.executeAction(client ->
         {
             client.putObject(
                     PutObjectArgs.builder()
@@ -44,6 +44,13 @@ public class FilesRepositoryImpl implements FilesRepository {
                             .stream(stream, size, -1)
                             .contentType(contentType)
                             .build());
+
+            StatObjectResponse response = getStatResponse(path, client);
+            return new FileDto(
+                    response.object(),
+                    response.size(),
+                    TypeFile.FILE
+            );
         });
     }
 
@@ -70,7 +77,7 @@ public class FilesRepositoryImpl implements FilesRepository {
 
             StatObjectResponse response = getStatResponse(to, client);
 
-            if(response.object().isBlank()){
+            if (response.object().isBlank()) {
                 throw new NotFoundResourceException();
             }
 
@@ -106,6 +113,7 @@ public class FilesRepositoryImpl implements FilesRepository {
         });
     }
 
+    @Override
     public InputStream getFiles(String objectName) {
 
         return manager.executeAction(client -> {
@@ -118,7 +126,7 @@ public class FilesRepositoryImpl implements FilesRepository {
     }
 
     @Override
-    public Iterable<Result<Item>> getItems(String path) {
+    public Iterable<Result<Item>> getItemsFiles(String path) {
         return manager.executeAction(client -> {
             return client.listObjects(
                     ListObjectsArgs.builder()
@@ -144,7 +152,7 @@ public class FilesRepositoryImpl implements FilesRepository {
         {
             Iterable<Result<Item>> objects = getListItems(client, from, true);
 
-            if(!objects.iterator().hasNext()){
+            if (!objects.iterator().hasNext()) {
                 throw new NotFoundResourceException();
             }
 
@@ -204,7 +212,7 @@ public class FilesRepositoryImpl implements FilesRepository {
                     ListObjectsArgs.builder()
                             .bucket(bucketName)
                             .prefix(folderName)
-                            .recursive(true)  // false = только прямые "дети", true = вообще всё рекурсивно
+                            .recursive(true)
                             .build());
             Iterator<Result<Item>> iterator = results.iterator();
             boolean hasItem = iterator.hasNext();
@@ -230,8 +238,6 @@ public class FilesRepositoryImpl implements FilesRepository {
             }
         });
     }
-
-
 
 
     private StatObjectResponse getStatResponse(String path, MinioClient client) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
@@ -267,7 +273,7 @@ public class FilesRepositoryImpl implements FilesRepository {
                 ListObjectsArgs.builder()
                         .bucket(bucketName)
                         .prefix(query)
-                        .recursive(recursive)  // false = только прямые "дети", true = вообще всё рекурсивно
+                        .recursive(recursive)
                         .build());
 
     }

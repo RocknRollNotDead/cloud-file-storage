@@ -2,14 +2,12 @@ package ru.codeportfolio;
 
 import io.minio.MinioClient;
 import org.jspecify.annotations.NonNull;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -56,16 +54,11 @@ class MinioControllerTest extends IntegrationTestBase {
     }
 
     @BeforeAll
-    static void setUp(){
+    static void setUp() {
         minioClient = MinioClient.builder()
                 .endpoint(minio.getS3URL())
                 .credentials(minio.getUserName(), minio.getPassword())
                 .build();
-    }
-
-    @AfterEach
-    void clearAuth() {
-        SecurityContextHolder.clearContext();
     }
 
     // скачать
@@ -79,7 +72,7 @@ class MinioControllerTest extends IntegrationTestBase {
 
         uploadTestFile(file, "docs0/");
 
-        makeGetRequestWithPath("/api/resource/download","docs0/test.txt")
+        makeGetRequestWithPath("/api/resource/download", "docs0/test.txt")
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/octet-stream"));
     } // для теста скачивания папки слишком много гемороя.
@@ -92,7 +85,7 @@ class MinioControllerTest extends IntegrationTestBase {
         makePostRequestWithPath(API_DIRECTORY, "docs00/")
                 .andExpect(status().isCreated());
 
-        makeGetRequestWithPath("/api/resource/download","docs00/test.txt")
+        makeGetRequestWithPath("/api/resource/download", "docs00/test.txt")
                 .andExpect(status().isNotFound());
     }
 
@@ -105,7 +98,7 @@ class MinioControllerTest extends IntegrationTestBase {
         makePostRequestWithPath(API_DIRECTORY, "docs11/")
                 .andExpect(status().isCreated());
 
-        makeGetRequestWithPath(API_RESOURCE,"docs11/")
+        makeGetRequestWithPath(API_RESOURCE, "docs11/")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("docs11"))
                 .andExpect(jsonPath("$.type").value("DIRECTORY"))
@@ -122,7 +115,7 @@ class MinioControllerTest extends IntegrationTestBase {
         uploadTestFile(file, "docs12/");
 
 
-        makeGetRequestWithPath(API_RESOURCE,"docs12/test.txt")
+        makeGetRequestWithPath(API_RESOURCE, "docs12/test.txt")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("test.txt"))
                 .andExpect(jsonPath("$.path").value("/docs12/"))
@@ -136,12 +129,11 @@ class MinioControllerTest extends IntegrationTestBase {
                 .andExpect(status().isCreated());
 
 
-        makeGetRequestWithPath(API_RESOURCE,"docs13/1/")
+        makeGetRequestWithPath(API_RESOURCE, "docs13/1/")
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").exists())
         ;
     }
-
 
 
     @Test
@@ -150,7 +142,7 @@ class MinioControllerTest extends IntegrationTestBase {
                 .andExpect(status().isCreated());
 
 
-        makeGetRequestWithPath(API_RESOURCE,"docs14/test.txt")
+        makeGetRequestWithPath(API_RESOURCE, "docs14/test.txt")
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").exists())
         ;
@@ -168,8 +160,8 @@ class MinioControllerTest extends IntegrationTestBase {
         uploadTestFile(file, "docs15/");
 
         mockMvc.perform(delete("/api/resource")
-                .with(user("test-user").roles("USER"))
-                .param("path", "docs15/test.txt"))
+                        .with(user("test-user").roles("USER"))
+                        .param("path", "docs15/test.txt"))
                 .andExpect(status().isNoContent())
         ;
 
@@ -187,7 +179,6 @@ class MinioControllerTest extends IntegrationTestBase {
                         .param("path", "docs16/test.txt"))
                 .andExpect(status().isNotFound());
     }
-
 
 
     // переименовать
@@ -361,14 +352,12 @@ class MinioControllerTest extends IntegrationTestBase {
     }
 
 
-
     @Test
     void shouldUploadFile() throws Exception {
         MockMultipartFile file = getMockMultipartFile();
 
         uploadTestFile(file, "");
     }
-
 
 
     @Test
@@ -384,6 +373,17 @@ class MinioControllerTest extends IntegrationTestBase {
                 .andExpect(status().isConflict());
     }
 
+    @Test
+    void shouldUploadFileWithNotExistFolder() throws Exception {
+        byte[] original = "test content".getBytes();
+        MockMultipartFile file = new MockMultipartFile("object", "test folder/.txt", "text/plain", original);
+
+
+        makeMultipartRequest(file, "")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$[0].name").value(".txt"));
+    }
+
     // папки
 
     @Test
@@ -395,6 +395,17 @@ class MinioControllerTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.path").value("/"))
                 .andExpect(jsonPath("$.name").value("docs"));
     }
+
+    @Test
+    void createFolderWithSymbol() throws Exception {
+
+        makePostRequestWithPath(API_DIRECTORY, "do/cs/")
+
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+
     @Test
     void notCreateFolderNotFound() throws Exception {
 
@@ -446,9 +457,6 @@ class MinioControllerTest extends IntegrationTestBase {
     }
 
 
-
-
-
     private @NonNull ResultActions makePostRequestWithPath(String request, String path) throws Exception {
         return mockMvc.perform(makePostRequestWithUser(request)
                 .param("path", path)
@@ -494,6 +502,7 @@ class MinioControllerTest extends IntegrationTestBase {
         return post(request)
                 .with(user("test-user").roles("USER"));
     }
+
     private static @NonNull MockHttpServletRequestBuilder makeGetRequestWithUser(String request) {
         return get(request)
                 .with(user("test-user").roles("USER"));

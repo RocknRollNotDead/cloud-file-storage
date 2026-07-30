@@ -27,7 +27,7 @@ public class AdminController {
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUserFiles(@PathVariable Long id) {
-        filesService.deleteById(id);
+        filesService.deleteAllUserFilesByUserId(id);
         return ResponseEntity.noContent().build();
     }
 }

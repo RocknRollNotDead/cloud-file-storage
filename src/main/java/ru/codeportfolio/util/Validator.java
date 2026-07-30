@@ -19,7 +19,7 @@ public final class Validator {
         if (password == null || password.isBlank()) {
             throw new ValidationException("Error to validation password. Your password = \"%s\"".formatted(password));
         }
-        if (password.length() < minLengthPassword){
+        if (password.length() < minLengthPassword) {
             throw new ValidationException("Password length must be more than %d symbols".formatted(minLengthPassword));
         }
         return password.trim();
@@ -32,6 +32,7 @@ public final class Validator {
         if (!path.isBlank() && path.charAt(0) == '/') {
             path = path.substring(1);
         }
+        // если в тз добавится запрет определенных символов, то я буду валидировать их именно здесь.
         return path.trim();
     }
 }
