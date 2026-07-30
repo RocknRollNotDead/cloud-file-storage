@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -16,6 +17,15 @@ import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.model.Role;
 import ru.codeportfolio.model.User;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -66,19 +76,46 @@ class MinioControllerTest extends IntegrationTestBase {
         makePostRequestWithPath(API_DIRECTORY, "docs0/")
                 .andExpect(status().isCreated());
 
-        MockMultipartFile file = getMockMultipartFile();
+        MockMultipartFile file = getMockMultipartFile("test.txt");
 
         uploadTestFile(file, "docs0/");
 
         makeGetRequestWithPath("/api/resource/download", "docs0/test.txt")
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/octet-stream"));
-    } // для теста скачивания папки слишком много гемороя.
+    }
+
+
+    @Test
+    void shouldDownloadZip() throws Exception {
+
+        MockMultipartFile file = getMockMultipartFile("test-folder/test.txt");
+        MockMultipartFile file2 = getMockMultipartFile("test-folder/test2.txt");
+
+        mockMvc.perform(multipart(API_RESOURCE)
+                .with(user("test-user").roles("USER"))
+                .file(file)
+                .file(file2)
+                .param("path", "")
+        );
+
+        MvcResult result = mockMvc.perform(get("/api/resource/download")
+                        .param("path", "test-folder/")
+                        .with(user("test-user").roles("USER")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Map<String, String> entries = getZipEntries(result);
+
+        assertThat(entries).hasSize(2);
+        assertThat(entries).containsEntry("test.txt", "test content");
+        assertThat(entries).containsEntry("test2.txt", "test content");
+    }
+
 
     // скачать ресурс не найден
     @Test
     void shouldNotDownload_() throws Exception {
-
 
         makePostRequestWithPath(API_DIRECTORY, "docs00/")
                 .andExpect(status().isCreated());
@@ -108,7 +145,7 @@ class MinioControllerTest extends IntegrationTestBase {
         makePostRequestWithPath(API_DIRECTORY, "docs12/")
                 .andExpect(status().isCreated());
 
-        MockMultipartFile file = getMockMultipartFile();
+        MockMultipartFile file = getMockMultipartFile("test.txt");
 
         uploadTestFile(file, "docs12/");
 
@@ -153,7 +190,7 @@ class MinioControllerTest extends IntegrationTestBase {
         makePostRequestWithPath(API_DIRECTORY, "docs15/")
                 .andExpect(status().isCreated());
 
-        MockMultipartFile file = getMockMultipartFile();
+        MockMultipartFile file = getMockMultipartFile("test.txt");
 
         uploadTestFile(file, "docs15/");
 
@@ -216,7 +253,7 @@ class MinioControllerTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.name").value("1"));
 
 
-        MockMultipartFile file = getMockMultipartFile();
+        MockMultipartFile file = getMockMultipartFile("test.txt");
 
         uploadTestFile(file, "docs3/1/");
 
@@ -249,7 +286,7 @@ class MinioControllerTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.name").value("2"));
 
 
-        MockMultipartFile file = getMockMultipartFile();
+        MockMultipartFile file = getMockMultipartFile("test.txt");
 
         uploadTestFile(file, "docs4/1/");
 
@@ -352,7 +389,7 @@ class MinioControllerTest extends IntegrationTestBase {
 
     @Test
     void shouldUploadFile() throws Exception {
-        MockMultipartFile file = getMockMultipartFile();
+        MockMultipartFile file = getMockMultipartFile("test.txt");
 
         uploadTestFile(file, "");
     }
@@ -360,8 +397,7 @@ class MinioControllerTest extends IntegrationTestBase {
 
     @Test
     void uploadExistFile() throws Exception {
-        byte[] resource = "test content".getBytes();
-        MockMultipartFile file = new MockMultipartFile("object", "test-1.txt", "text/plain", resource);
+        MockMultipartFile file = getMockMultipartFile("test-1.txt");
 
         makeMultipartRequest(file, "")
 
@@ -373,8 +409,7 @@ class MinioControllerTest extends IntegrationTestBase {
 
     @Test
     void shouldUploadFileWithNotExistFolder() throws Exception {
-        byte[] original = "test content".getBytes();
-        MockMultipartFile file = new MockMultipartFile("object", "test folder/.txt", "text/plain", original);
+        MockMultipartFile file = getMockMultipartFile("test folder/.txt");
 
 
         makeMultipartRequest(file, "")
@@ -454,6 +489,21 @@ class MinioControllerTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.message").exists());
     }
 
+    private @NonNull Map<String, String> getZipEntries(MvcResult result) throws IOException {
+        byte[] zipBytes = result.getResponse().getContentAsByteArray();
+
+        Map<String, String> entries = new HashMap<>();
+        try (ZipInputStream zipIn = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
+            ZipEntry entry;
+            while ((entry = zipIn.getNextEntry()) != null) {
+                String content = new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
+                entries.put(entry.getName(), content);
+                zipIn.closeEntry();
+            }
+        }
+        return entries;
+    }
+
 
     private @NonNull ResultActions makePostRequestWithPath(String request, String path) throws Exception {
         return mockMvc.perform(makePostRequestWithUser(request)
@@ -469,9 +519,9 @@ class MinioControllerTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$[0].type").value("FILE"));
     }
 
-    private static @NonNull MockMultipartFile getMockMultipartFile() {
+    private static @NonNull MockMultipartFile getMockMultipartFile(String nameFile) {
         byte[] original = "test content".getBytes();
-        MockMultipartFile file = new MockMultipartFile("object", "test.txt", "text/plain", original);
+        MockMultipartFile file = new MockMultipartFile("object", nameFile, "text/plain", original);
         return file;
     }
 

@@ -7,7 +7,6 @@ spring:
     redis:
       host: localhost
   jpa:
-    show-sql: true
     hibernate:
       ddl-auto: update
   flyway:

@@ -16,6 +16,7 @@ import ru.codeportfolio.dto.db.FileDto;
 import ru.codeportfolio.exception.*;
 import ru.codeportfolio.model.User;
 import ru.codeportfolio.util.FolderUtil;
+import ru.codeportfolio.util.MemoryCheckUtil;
 import ru.codeportfolio.util.ResourceMapper;
 import ru.codeportfolio.util.Validator;
 
@@ -31,19 +32,20 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 public class FileService {
 
-    public static final long MAX_SIZE_STORAGE_FOR_ONE_USER = 500_000_000L;
-    public static final long MEGABYTE = 1_000_000L;
+
 
     private final FileRepository fileRepository;
     private final FolderRepository folderRepository;
 
     private final UserRepository userRepository;
 
+    private final ResourceStreamer streamer;
 
-    public FileService(FileRepository fileRepository, FolderRepository foldersRepository, UserRepository userRepository) {
+    public FileService(FileRepository fileRepository, FolderRepository foldersRepository, UserRepository userRepository, ResourceStreamer streamer) {
         this.fileRepository = fileRepository;
         this.folderRepository = foldersRepository;
         this.userRepository = userRepository;
+        this.streamer = streamer;
     }
 
 
@@ -91,33 +93,35 @@ public class FileService {
     public List<ResourceResponseDto> upload(String path, String username, List<MultipartFile> files) {
         path = handleRequestAndReturnPath(path, username);
         List<ResourceResponseDto> result = new ArrayList<>();
-        log.info("%s upload %d:".formatted(username, files.size()));
-        String filePath;
 
-        if (checkMemoryForHasHalfGigabyte(username)) {
-            long maxSize = Math.ceilDiv(MAX_SIZE_STORAGE_FOR_ONE_USER, MEGABYTE);
+
+
+        if (MemoryCheckUtil.checkMemoryForMemoryOverflow(
+                folderRepository.getSize(
+                        handleRequestAndReturnPath("", username)) + files.size())) {
+            long maxSize = MemoryCheckUtil.maxSizeFiles();
             throw new OutOfMemoryException(
                     "You're running low on disk space. Buy yourself a hard drive. Max size your files - %d MB"
                             .formatted(maxSize));
         }
 
+        log.info("{} upload {}:", username, files.size());
+
+        String filePath;
         StringBuilder filesNames = new StringBuilder();
+        boolean exceptionFlag = false;
+        StringBuilder failFilesDownloadNames = new StringBuilder();
 
         for (MultipartFile file : files) {
             if (file == null) {
                 continue;
             }
 
-            if (checkMemoryForHasHalfGigabyte(username)) {
-                throw new ValidationException("Error saving file - not enough space. Was save files: " + filesNames);
-            }
-
             filePath = path + file.getOriginalFilename();
 
             if (fileRepository.isExist(filePath)) {
-                throw new AlreadyExistException(
-                        "This file %s already exist. The download was interrupted. Was save files: %s"
-                                .formatted(file.getOriginalFilename(), filesNames));
+                exceptionFlag = true;
+                failFilesDownloadNames.append(file.getOriginalFilename()).append("; ");
             }
 
             try (InputStream stream = file.getInputStream()){
@@ -137,6 +141,12 @@ public class FileService {
             }
 
         }
+        if (exceptionFlag){
+            throw new AlreadyExistException(
+                    "This files names %s already exist. The download was interrupted. Was save files: %s"
+                            .formatted(failFilesDownloadNames, filesNames));
+        }
+
         return result;
     }
 
@@ -162,9 +172,9 @@ public class FileService {
         path = handleRequestAndReturnPath(path, username);
 
         if (FolderUtil.isFolder(path)) {
-            streamFolderAsZipFile(path, outputStream);
+            streamer.streamFolderAsZipFile(path, outputStream);
         } else {
-            streamFile(path, outputStream);
+            streamer.streamFile(path, outputStream);
         }
     }
 
@@ -222,7 +232,7 @@ public class FileService {
 
         String path = getUserPath(id, "");
         folderRepository.delete(path);
-        log.info("Delete all files " + path);
+        log.info("Delete all files {}", path);
     }
 
 
@@ -238,7 +248,7 @@ public class FileService {
                         folderRepository.getSize(getFolderName(user.getId()))
                 ));
             } catch (RuntimeException e) {
-                log.info("Error get user! " + user.getLogin());
+                log.info("Error get user! {}", user.getLogin());
                 continue;
             }
         }
@@ -329,10 +339,6 @@ public class FileService {
 
         return getUserPath(userId, path);
 
-    }
-
-    private boolean checkMemoryForHasHalfGigabyte(String username) {
-        return folderRepository.getSize(handleRequestAndReturnPath("", username)) > MAX_SIZE_STORAGE_FOR_ONE_USER;
     }
 
 }
