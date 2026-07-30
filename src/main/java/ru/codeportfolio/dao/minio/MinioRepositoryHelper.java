@@ -11,12 +11,12 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 @Component
-public class MinioRepositoryActionHelper {
+public class MinioRepositoryHelper {
     protected final MyMinioOperationManager manager;
     protected final String bucketName;
 
 
-    public MinioRepositoryActionHelper(MyMinioOperationManager manager, MinioProperties properties) {
+    public MinioRepositoryHelper(MyMinioOperationManager manager, MinioProperties properties) {
         this.manager = manager;
         this.bucketName = properties.bucket();
     }

@@ -20,15 +20,15 @@ public class FolderRepositoryImpl implements FolderRepository {
 
     private final MyMinioOperationManager manager;
     private final String bucketName;
-    private final MinioRepositoryActionHelper minioRepositoryActionHelper;
+    private final MinioRepositoryHelper minioRepositoryHelper;
 
 
 
-    public FolderRepositoryImpl(MyMinioOperationManager manager, MinioProperties properties, MinioRepositoryActionHelper minioRepositoryActionHelper) {
+    public FolderRepositoryImpl(MyMinioOperationManager manager, MinioProperties properties, MinioRepositoryHelper minioRepositoryHelper) {
 
         this.manager = manager;
         this.bucketName = properties.bucket();
-        this.minioRepositoryActionHelper = minioRepositoryActionHelper;
+        this.minioRepositoryHelper = minioRepositoryHelper;
     }
 
 
@@ -57,7 +57,7 @@ public class FolderRepositoryImpl implements FolderRepository {
         {
             List<FileDto> result = new ArrayList<>();
 
-            for (Result<Item> item : minioRepositoryActionHelper.getListItems(client, query, true)) {
+            for (Result<Item> item : minioRepositoryHelper.getListItems(client, query, true)) {
 
                 result.add(new FileDto(
                         item.get().objectName(),
@@ -72,7 +72,7 @@ public class FolderRepositoryImpl implements FolderRepository {
     public void move(String from, String to) {
         manager.executeInTransactionWithoutReturn(client ->
         {
-            Iterable<Result<Item>> objects = minioRepositoryActionHelper.getListItems(client, from, true);
+            Iterable<Result<Item>> objects = minioRepositoryHelper.getListItems(client, from, true);
 
             if (!objects.iterator().hasNext()) {
                 throw new NotFoundResourceException();
@@ -82,9 +82,9 @@ public class FolderRepositoryImpl implements FolderRepository {
                 String oldName = result.get().objectName();
                 String newName = to + oldName.substring(from.length());
 
-                minioRepositoryActionHelper.copyFile(oldName, newName, client);
+                minioRepositoryHelper.copyFile(oldName, newName, client);
 
-                minioRepositoryActionHelper.removeObject(oldName, client);
+                minioRepositoryHelper.removeObject(oldName, client);
             }
         });
     }
@@ -93,12 +93,12 @@ public class FolderRepositoryImpl implements FolderRepository {
     public void delete(String path) {
         manager.executeInTransactionWithoutReturn(client ->
         {
-            Iterable<Result<Item>> objects = minioRepositoryActionHelper.getListItems(client, path, true);
+            Iterable<Result<Item>> objects = minioRepositoryHelper.getListItems(client, path, true);
 
             for (Result<Item> result : objects) {
                 String oldName = result.get().objectName();
 
-                minioRepositoryActionHelper.removeObject(oldName, client);
+                minioRepositoryHelper.removeObject(oldName, client);
             }
         });
     }
@@ -140,7 +140,7 @@ public class FolderRepositoryImpl implements FolderRepository {
         {
             Long result = 0L;
 
-            for (Result<Item> item : minioRepositoryActionHelper.getListItems(client, path, true)) {
+            for (Result<Item> item : minioRepositoryHelper.getListItems(client, path, true)) {
 
                 result = result + item.get().size();
             }
@@ -155,7 +155,7 @@ public class FolderRepositoryImpl implements FolderRepository {
         {
             List<FileDto> result = new ArrayList<>();
 
-            for (Result<Item> item : minioRepositoryActionHelper.getListItems(client, path, false)) {
+            for (Result<Item> item : minioRepositoryHelper.getListItems(client, path, false)) {
 
                 if (item.get().objectName().equals(path)) {
                     continue;

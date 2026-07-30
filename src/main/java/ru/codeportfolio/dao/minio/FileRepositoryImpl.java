@@ -18,13 +18,13 @@ public class FileRepositoryImpl implements FileRepository {
 
     private final MyMinioOperationManager manager;
     private final String bucketName;
-    private final MinioRepositoryActionHelper minioRepositoryActionHelper;
+    private final MinioRepositoryHelper minioRepositoryHelper;
 
 
-    public FileRepositoryImpl(MyMinioOperationManager manager, MinioProperties properties, MinioRepositoryActionHelper minioRepositoryActionHelper) {
+    public FileRepositoryImpl(MyMinioOperationManager manager, MinioProperties properties, MinioRepositoryHelper minioRepositoryHelper) {
         this.bucketName = properties.bucket();
         this.manager = manager;
-        this.minioRepositoryActionHelper = minioRepositoryActionHelper;
+        this.minioRepositoryHelper = minioRepositoryHelper;
     }
 
 
@@ -41,7 +41,7 @@ public class FileRepositoryImpl implements FileRepository {
                             .contentType(contentType)
                             .build());
 
-            StatObjectResponse response = minioRepositoryActionHelper.getStatResponse(path, client);
+            StatObjectResponse response = minioRepositoryHelper.getStatResponse(path, client);
             return new FileDto(
                     response.object(),
                     response.size(),
@@ -54,7 +54,7 @@ public class FileRepositoryImpl implements FileRepository {
     public FileDto getInfo(String path) {
         return manager.executeAction(client ->
         {
-            StatObjectResponse response = minioRepositoryActionHelper.getStatResponse(path, client);
+            StatObjectResponse response = minioRepositoryHelper.getStatResponse(path, client);
             return new FileDto(
                     response.object(),
                     response.size(),
@@ -67,11 +67,11 @@ public class FileRepositoryImpl implements FileRepository {
     public FileDto move(String from, String to) {
         return manager.executeAction(client ->
         {
-            minioRepositoryActionHelper.copyFile(from, to, client);
+            minioRepositoryHelper.copyFile(from, to, client);
 
-            minioRepositoryActionHelper.removeObject(from, client);
+            minioRepositoryHelper.removeObject(from, client);
 
-            StatObjectResponse response = minioRepositoryActionHelper.getStatResponse(to, client);
+            StatObjectResponse response = minioRepositoryHelper.getStatResponse(to, client);
 
             if (response.object().isBlank()) {
                 throw new NotFoundResourceException();
@@ -90,7 +90,7 @@ public class FileRepositoryImpl implements FileRepository {
     public void delete(String path) {
         manager.executeInTransactionWithoutReturn(client ->
         {
-            minioRepositoryActionHelper.removeObject(path, client);
+            minioRepositoryHelper.removeObject(path, client);
         });
 
     }
@@ -98,7 +98,7 @@ public class FileRepositoryImpl implements FileRepository {
     public boolean isExist(String path) {
         return manager.executeAction(client -> {
             try {
-                minioRepositoryActionHelper.getStatResponse(path, client);
+                minioRepositoryHelper.getStatResponse(path, client);
                 return true;
             } catch (ErrorResponseException e) {
                 if (e.errorResponse().code().equals("NoSuchKey")) {

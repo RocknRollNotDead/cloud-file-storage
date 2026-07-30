@@ -1,8 +1,6 @@
 package ru.codeportfolio.service;
 
 
-import io.minio.Result;
-import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,8 +23,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 @Service
 @Slf4j
@@ -88,7 +84,7 @@ public class FileService {
     }
 
 
-    // общее - 1C, 3R, 1U, 1D
+    // общее /resources - 1C, 3R, 1U, 1D
 
     public List<ResourceResponseDto> upload(String path, String username, List<MultipartFile> files) {
         path = handleRequestAndReturnPath(path, username);
@@ -254,48 +250,6 @@ public class FileService {
         }
         return result;
     }
-
-
-    private void streamFile(String path, OutputStream outputStream) {
-        try(InputStream fileStream = fileRepository.getStream(path)) {
-
-            fileStream.transferTo(outputStream);
-
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("File output error! ", e);
-        }
-    }
-
-    private void streamFolderAsZipFile(String path, OutputStream outputStream) {
-        try (ZipOutputStream zipOut = new ZipOutputStream(outputStream)) {
-
-            Iterable<Result<Item>> objects = folderRepository.getItemsFiles(path);
-
-            for (Result<Item> res : objects) {
-                Item item = res.get();
-
-                if (item.isDir()) {
-                    continue;
-                }
-
-                String entryName = item.objectName().substring(path.length());
-
-                try (InputStream fileStream = fileRepository.getStream(item.objectName())) {
-
-                    zipOut.putNextEntry(new ZipEntry(entryName));
-                    fileStream.transferTo(zipOut);
-                    zipOut.closeEntry();
-                }
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException("Archive folder error!", e);
-        }
-    }
-
-
 
 
 
