@@ -123,6 +123,7 @@ public class FileService {
             if (fileRepository.isExist(filePath)) {
                 exceptionFlag = true;
                 failFilesDownloadNames.append(file.getOriginalFilename()).append("; ");
+                continue;
             }
 
             try (InputStream stream = file.getInputStream()) {
