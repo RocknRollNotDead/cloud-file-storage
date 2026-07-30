@@ -4,7 +4,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.codeportfolio.dao.FilesRepository;
+import ru.codeportfolio.dao.minio.FileRepository;
 import ru.codeportfolio.dao.UserRepository;
 import ru.codeportfolio.dto.UserDto;
 import ru.codeportfolio.exception.AlreadyExistException;
@@ -20,7 +20,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, FilesRepository filesRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, FileRepository fileRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }

@@ -1,4 +1,4 @@
-package ru.codeportfolio.dao;
+package ru.codeportfolio.dao.minio;
 
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;

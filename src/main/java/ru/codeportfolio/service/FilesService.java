@@ -2,13 +2,13 @@ package ru.codeportfolio.service;
 
 
 import io.minio.Result;
-import io.minio.StatObjectResponse;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import ru.codeportfolio.dao.FilesRepository;
+import ru.codeportfolio.dao.minio.FileRepository;
 import ru.codeportfolio.dao.UserRepository;
+import ru.codeportfolio.dao.minio.FolderRepository;
 import ru.codeportfolio.dto.CreateFolderResponseDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
 import ru.codeportfolio.dto.UsersSizeDto;
@@ -32,12 +32,16 @@ public class FilesService {
 
     public static final long MAX_SIZE_STORAGE_FOR_ONE_USER = 500_000_000L;
     public static final long MEGABYTE = 1_000_000L;
-    private final FilesRepository repository;
+
+    private final FileRepository fileRepository;
+    private final FolderRepository folderRepository;
+
     private final UserRepository userRepository;
 
 
-    public FilesService(FilesRepository repository, UserRepository userRepository) {
-        this.repository = repository;
+    public FilesService(FileRepository fileRepository, FolderRepository foldersRepository, UserRepository userRepository) {
+        this.fileRepository = fileRepository;
+        this.folderRepository = foldersRepository;
         this.userRepository = userRepository;
     }
 
@@ -48,7 +52,7 @@ public class FilesService {
         if (!isFolder(path)) {
             throw new ValidationException("This is no folder, this is file!");
         }
-        if (repository.isFolderExist(path)) {
+        if (folderRepository.isExist(path)) {
             throw new AlreadyExistException("Folder with this name already exist!");
         }
 
@@ -56,7 +60,7 @@ public class FilesService {
             throw new NotFoundException("Parental folder not exist!");
         }
 
-        repository.createFolder(path);
+        folderRepository.save(path);
         ResourceResponseDto resourceDto = ResourceMapper.mapFolder(path);
         return new CreateFolderResponseDto(resourceDto.path(),
                 resourceDto.name(),
@@ -72,9 +76,9 @@ public class FilesService {
             throw new ValidationException("This is no folder, this is file!");
         }
 
-        if (repository.isFolderExist(path)) {
+        if (folderRepository.isExist(path)) {
 
-            return ResourceMapper.mapResourcesInFolder(repository.getInfoFolder(path));
+            return ResourceMapper.mapResourcesInFolder(folderRepository.getInfo(path));
         } else {
             throw new NotFoundException("Folder not found!");
         }
@@ -109,14 +113,14 @@ public class FilesService {
 
             filePath = path + file.getOriginalFilename();
 
-            if (repository.isFileExist(filePath)) {
+            if (fileRepository.isExist(filePath)) {
                 throw new AlreadyExistException(
                         "This file %s already exist. The download was interrupted. Was save files: %s"
                                 .formatted(file.getOriginalFilename(), filesNames));
             }
 
             try {
-                FileDto fileDto = repository.saveFile(
+                FileDto fileDto = fileRepository.save(
                         filePath,
                         file.getInputStream(),
                         file.getSize(),
@@ -142,10 +146,10 @@ public class FilesService {
 
         if (!isFolder(path)) {
             return ResourceMapper.mapResource(
-                    repository.getInfoFile(path)
+                    fileRepository.getInfo(path)
             );
         }
-        if (repository.isFolderExist(path)) {
+        if (folderRepository.isExist(path)) {
 
             return ResourceMapper.mapFolder(path);
         } else {
@@ -167,7 +171,7 @@ public class FilesService {
 
         query = handleRequestAndReturnPath(query, username);
 
-        return ResourceMapper.mapResourcesInFolder(repository.search(query));
+        return ResourceMapper.mapResourcesInFolder(folderRepository.search(query));
 
     }
 
@@ -176,16 +180,16 @@ public class FilesService {
         from = handleRequestAndReturnPath(from, username);
         to = handleRequestAndReturnPath(to, username);
         if (isFolder(from) && isFolder(to)) {
-            if (repository.isFolderExist(to)) {
+            if (folderRepository.isExist(to)) {
                 throw new AlreadyExistException("Target folder already exist!");
             }
-            repository.moveFolder(from, to);
+            folderRepository.move(from, to);
             return ResourceMapper.mapFolder(to);
         } else if (!isFolder(from) && !isFolder(to)) {
-            if (repository.isFileExist(to)) {
+            if (fileRepository.isExist(to)) {
                 throw new AlreadyExistException("Target file already exist!");
             }
-            return ResourceMapper.mapResource(repository.moveFile(from, to));
+            return ResourceMapper.mapResource(fileRepository.move(from, to));
         } else {
             throw new ValidationException("Path 1 and path 2 must be both folders or both files!");
         }
@@ -197,15 +201,15 @@ public class FilesService {
         path = handleRequestAndReturnPath(path, username);
 
         if (isFolder(path)) {
-            if (!repository.isFolderExist(path)) {
+            if (!folderRepository.isExist(path)) {
                 throw new NotFoundException("Folder not found!");
             }
-            repository.deleteFolder(path);
+            folderRepository.delete(path);
         } else {
-            if (!repository.isFileExist(path)) {
+            if (!fileRepository.isExist(path)) {
                 throw new NotFoundException("Folder not found!");
             }
-            repository.deleteFile(path);
+            fileRepository.delete(path);
         }
 
     }
@@ -216,7 +220,7 @@ public class FilesService {
         }
 
         String path = getUserPath(id, "");
-        repository.deleteFolder(path);
+        folderRepository.delete(path);
 
     }
 
@@ -230,7 +234,7 @@ public class FilesService {
                 result.add(new UsersSizeDto(
                         user.getLogin(),
                         user.getId(),
-                        repository.getSize(getFolderName(user.getId()))
+                        folderRepository.getSize(getFolderName(user.getId()))
                 ));
             } catch (RuntimeException e) {
                 continue;
@@ -241,13 +245,9 @@ public class FilesService {
 
 
     private void streamFile(String path, OutputStream outputStream) {
-        try {
-            StatObjectResponse object = repository.getItem(path);
+        try(InputStream fileStream = fileRepository.getStream(path)) {
 
-            try (InputStream fileStream = repository.getFiles(object.object())) {
-
-                fileStream.transferTo(outputStream);
-            }
+            fileStream.transferTo(outputStream);
 
         } catch (RuntimeException e) {
             throw e;
@@ -259,7 +259,7 @@ public class FilesService {
     private void streamFolderAsZipFile(String path, OutputStream outputStream) {
         try (ZipOutputStream zipOut = new ZipOutputStream(outputStream)) {
 
-            Iterable<Result<Item>> objects = repository.getItemsFiles(path);
+            Iterable<Result<Item>> objects = folderRepository.getItemsFiles(path);
 
             for (Result<Item> res : objects) {
                 Item item = res.get();
@@ -270,7 +270,7 @@ public class FilesService {
 
                 String entryName = item.objectName().substring(path.length());
 
-                try (InputStream fileStream = repository.getFiles(item.objectName())) {
+                try (InputStream fileStream = fileRepository.getStream(item.objectName())) {
 
                     zipOut.putNextEntry(new ZipEntry(entryName));
                     fileStream.transferTo(zipOut);
@@ -295,7 +295,7 @@ public class FilesService {
         String folderParentName = path.substring(0, path.length() - (fileName.length() + 1));
 
 
-        return repository.isFolderExist(folderParentName);
+        return folderRepository.isExist(folderParentName);
     }
 
     private String getUserPath(Long userId, String path) {
@@ -314,8 +314,8 @@ public class FilesService {
 
         String folderName = getFolderName(userId);
 
-        if (!repository.isFolderExist(folderName)) {
-            repository.createFolder(folderName);
+        if (!folderRepository.isExist(folderName)) {
+            folderRepository.save(folderName);
         }
 
     }
@@ -332,7 +332,7 @@ public class FilesService {
     }
 
     private boolean checkMemoryForHasHalfGigabyte(String username) {
-        return repository.getSize(handleRequestAndReturnPath("", username)) > MAX_SIZE_STORAGE_FOR_ONE_USER;
+        return folderRepository.getSize(handleRequestAndReturnPath("", username)) > MAX_SIZE_STORAGE_FOR_ONE_USER;
     }
 
 }

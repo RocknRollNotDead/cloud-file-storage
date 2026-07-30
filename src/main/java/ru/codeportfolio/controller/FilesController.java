@@ -120,7 +120,7 @@ public class FilesController {
     public ResponseEntity<List<ResourceResponseDto>> upload(
             @RequestParam String path,
             @AuthenticationPrincipal UserDetails principal,
-            @RequestParam List<MultipartFile> object) {
+            @RequestParam(required = false) List<MultipartFile> object) {
 
         if (object == null) {
             throw new ValidationException("Non file found!");
