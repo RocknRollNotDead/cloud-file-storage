@@ -1,5 +1,7 @@
 package ru.codeportfolio.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -32,6 +34,9 @@ public class AuthController {
         this.service = service;
     }
 
+    @Operation(summary = "Авторизоваться")
+    @ApiResponse(responseCode = "200", description = "Успех")
+    @ApiResponse(responseCode = "401", description = "Неправильные пароль или username (отсутствуют совпадения в бд)")
     @PostMapping("/sign-in")
     public ResponseEntity<UserDto> logIn(HttpServletRequest httpRequest,
                                          HttpServletResponse response,
@@ -60,6 +65,10 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "Зарегистрироваться")
+    @ApiResponse(responseCode = "201", description = "Успех")
+    @ApiResponse(responseCode = "400", description = "Невалидный аргумент (пароль или username)")
+    @ApiResponse(responseCode = "409", description = "username занят другим пользователем")
     @PostMapping("/sign-up")
     public ResponseEntity<UserDto> createUser(
             @RequestBody(required = false) RequestAuthDto req) {
