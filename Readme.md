@@ -4,7 +4,9 @@
 Шестой учебный проект из [роадмапа Сергея Жукова](https://zhukovsd.github.io/java-backend-learning-course/).
 [ТЗ проекта](https://zhukovsd.github.io/java-backend-learning-course/projects/cloud-file-storage/).
 
-Задеплоен на http://193.168.46.216:8081 и https://cloud-file-storage.codeportfolio.ru/
+Задеплоен на https://cloud-file-storage.codeportfolio.ru/
+Api доступно по http://193.168.46.216:8080/
+Swagger доступен по http://193.168.46.216:8080/swagger-ui.html или по https://cloud-file-storage.codeportfolio.ru/swagger-ui.html
 
 ## Стек и структура
 
@@ -37,6 +39,7 @@
 (доступно только администратору:)
 
 **GET `/admin-panel/users`** — список всех пользователей с обьемом их файлов
+
 **DELETE `/admin-panel/users/{id}`** — удалить файлы пользователя
 
 
@@ -76,8 +79,8 @@
 ## Swagger
 
 Также эта информация указана в swagger - 
-https://cloud-file-storage.codeportfolio.ru/swagger-ui/index.html, http://193.168.46.216:8081/swagger-ui/index.html
-https://cloud-file-storage.codeportfolio.ru/swagger-ui.html, http://193.168.46.216:8081/swagger-ui.html
+https://cloud-file-storage.codeportfolio.ru/swagger-ui/index.html, http://193.168.46.216:8080/swagger-ui/index.html
+https://cloud-file-storage.codeportfolio.ru/swagger-ui.html, http://193.168.46.216:8080/swagger-ui.html
 
 ## Как буду деплоить
 
@@ -113,22 +116,45 @@ volumes:
 
 собрать образ 
 
+а)
 ```bash
 docker build -t app .
 docker save -o app.tar app
 ```
 
+или
+
+б)
+```bash
+docker build -t ghcr.io/usernameonhub/cloud-file-storage:latest .
+docker push -t ghcr.io/usernameonhub/cloud-file-storage:latest .
+```
+
+
+
 **2.3 отправить образ на сервер**
+
 
 ```bash
 scp -r C:\Users\myuser\путь\app.tar root@000.000.0.000:~/cloud-file-storage
 ```
 отправляет в директорию `пользователь/cloud-file-storage` на удалённом сервере
 
-распаковать образ на сервере
+распаковать образ на сервере так
 
+а)
 ```bash
 docker load -i app.tar
+```
+
+или сделать так:
+
+б)
+
+Перед пунктом 2.3 заменить в докер compose файле
+```yaml
+image: app # заменить на:
+image: ghcr.io/usernameonhub/cloud-file-storage:latest
 ```
 
 **2.4 запустить docker-compose**
@@ -153,11 +179,19 @@ scp -r docker-compose.yml root@000.000.0.000:~/cloud-file-storage/
 
 и потом на удалённом сервере 
 
+а)
 ```bash
 docker compose down
-DOCKER_BUILDKIT=0 docker compose up --build -d
+docker compose up --build -d
 ```
-Флаг с buildkit снят из-за того, что с флагом docker пытается параллельно загрузить все зависимости, и сервер этого не вывозит и не даёт нормально скачать.
+
+либо
+
+б)
+```bash
+docker compose pull
+docker compose up -d
+```
 
 и потом посмотреть логи
 
@@ -179,7 +213,7 @@ ls -la /usr/local/tomcat/logs
 
 acme сам получит SSL сертификат по переменным
 
-И после этого всё приложение будет доступно и по http://193.168.46.216:8081 (как по тз) и https://cloud-file-storage.codeportfolio.ru (https с SSL сертификатом)
+И после этого всё приложение будет доступно и по https://cloud-file-storage.codeportfolio.ru (https с SSL сертификатом)
 
 
 ## О том, что изучил на этом проекте

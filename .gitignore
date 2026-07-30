@@ -8,6 +8,7 @@ build/
 .idea
 legacy
 frontend
+site/static
 
 **/**/resources/static
 !**/**/resources/static/admin-panel.html
