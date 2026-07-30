@@ -4,8 +4,8 @@ import io.minio.ListObjectsArgs;
 import io.minio.PutObjectArgs;
 import io.minio.Result;
 import io.minio.messages.Item;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+import ru.codeportfolio.config.minio.MinioProperties;
 import ru.codeportfolio.dto.db.FileDto;
 import ru.codeportfolio.exception.NotFoundResourceException;
 import ru.codeportfolio.model.TypeFile;
@@ -16,13 +16,19 @@ import java.util.Iterator;
 import java.util.List;
 
 @Repository
-public class FolderRepositoryImpl extends ResourceRepository implements FolderRepository {
+public class FolderRepositoryImpl implements FolderRepository {
+
+    private final MyMinioOperationManager manager;
+    private final String bucketName;
+    private final RepositoryActionHelper repositoryActionHelper;
 
 
 
-    public FolderRepositoryImpl(MyMinioTransactionManager manager, @Value("${spring.minio.bucket}") String bucketName) {
-        super(manager, bucketName);
+    public FolderRepositoryImpl(MyMinioOperationManager manager, MinioProperties properties, RepositoryActionHelper repositoryActionHelper) {
 
+        this.manager = manager;
+        this.bucketName = properties.bucket();
+        this.repositoryActionHelper = repositoryActionHelper;
     }
 
 
@@ -51,7 +57,7 @@ public class FolderRepositoryImpl extends ResourceRepository implements FolderRe
         {
             List<FileDto> result = new ArrayList<>();
 
-            for (Result<Item> item : getListItems(client, query, true)) {
+            for (Result<Item> item : repositoryActionHelper.getListItems(client, query, true)) {
 
                 result.add(new FileDto(
                         item.get().objectName(),
@@ -66,7 +72,7 @@ public class FolderRepositoryImpl extends ResourceRepository implements FolderRe
     public void move(String from, String to) {
         manager.executeInTransactionWithoutReturn(client ->
         {
-            Iterable<Result<Item>> objects = getListItems(client, from, true);
+            Iterable<Result<Item>> objects = repositoryActionHelper.getListItems(client, from, true);
 
             if (!objects.iterator().hasNext()) {
                 throw new NotFoundResourceException();
@@ -76,9 +82,9 @@ public class FolderRepositoryImpl extends ResourceRepository implements FolderRe
                 String oldName = result.get().objectName();
                 String newName = to + oldName.substring(from.length());
 
-                copyFile(oldName, newName, client);
+                repositoryActionHelper.copyFile(oldName, newName, client);
 
-                removeObject(oldName, client);
+                repositoryActionHelper.removeObject(oldName, client);
             }
         });
     }
@@ -87,12 +93,12 @@ public class FolderRepositoryImpl extends ResourceRepository implements FolderRe
     public void delete(String path) {
         manager.executeInTransactionWithoutReturn(client ->
         {
-            Iterable<Result<Item>> objects = getListItems(client, path, true);
+            Iterable<Result<Item>> objects = repositoryActionHelper.getListItems(client, path, true);
 
             for (Result<Item> result : objects) {
                 String oldName = result.get().objectName();
 
-                removeObject(oldName, client);
+                repositoryActionHelper.removeObject(oldName, client);
             }
         });
     }
@@ -134,7 +140,7 @@ public class FolderRepositoryImpl extends ResourceRepository implements FolderRe
         {
             Long result = 0L;
 
-            for (Result<Item> item : getListItems(client, path, true)) {
+            for (Result<Item> item : repositoryActionHelper.getListItems(client, path, true)) {
 
                 result = result + item.get().size();
             }
@@ -149,7 +155,7 @@ public class FolderRepositoryImpl extends ResourceRepository implements FolderRe
         {
             List<FileDto> result = new ArrayList<>();
 
-            for (Result<Item> item : getListItems(client, path, false)) {
+            for (Result<Item> item : repositoryActionHelper.getListItems(client, path, false)) {
 
                 if (item.get().objectName().equals(path)) {
                     continue;

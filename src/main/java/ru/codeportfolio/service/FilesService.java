@@ -6,8 +6,8 @@ import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import ru.codeportfolio.dao.minio.FileRepository;
 import ru.codeportfolio.dao.UserRepository;
+import ru.codeportfolio.dao.minio.FileRepository;
 import ru.codeportfolio.dao.minio.FolderRepository;
 import ru.codeportfolio.dto.CreateFolderResponseDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
@@ -94,9 +94,9 @@ public class FilesService {
         String filePath;
 
         if (checkMemoryForHasHalfGigabyte(username)) {
-            double maxSize = (double) MAX_SIZE_STORAGE_FOR_ONE_USER / MEGABYTE;
+            long maxSize = Math.ceilDiv(MAX_SIZE_STORAGE_FOR_ONE_USER, MEGABYTE);
             throw new OutOfMemoryException(
-                    "You're running low on disk space. Buy yourself a hard drive. Max size your files - %f MB"
+                    "You're running low on disk space. Buy yourself a hard drive. Max size your files - %d MB"
                             .formatted(maxSize));
         }
 
@@ -119,10 +119,10 @@ public class FilesService {
                                 .formatted(file.getOriginalFilename(), filesNames));
             }
 
-            try {
+            try (InputStream stream = file.getInputStream()){
                 FileDto fileDto = fileRepository.save(
                         filePath,
-                        file.getInputStream(),
+                        stream,
                         file.getSize(),
                         file.getContentType()
                 );
@@ -207,7 +207,7 @@ public class FilesService {
             folderRepository.delete(path);
         } else {
             if (!fileRepository.isExist(path)) {
-                throw new NotFoundException("Folder not found!");
+                throw new NotFoundException("File not found!");
             }
             fileRepository.delete(path);
         }
@@ -237,6 +237,7 @@ public class FilesService {
                         folderRepository.getSize(getFolderName(user.getId()))
                 ));
             } catch (RuntimeException e) {
+                log.info("Error get user! " + user.getLogin());
                 continue;
             }
         }

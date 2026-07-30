@@ -60,7 +60,7 @@ public class MyExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleGeneric(RuntimeException e) {
-        log.error(e.getMessage().toUpperCase(), e);
+        log.error(e.getMessage(), e);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Backend error!");
     }
 

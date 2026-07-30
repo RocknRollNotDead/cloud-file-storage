@@ -1,10 +1,11 @@
 package ru.codeportfolio.dao.minio;
 
-import io.minio.*;
-import io.minio.errors.*;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import io.minio.GetObjectArgs;
+import io.minio.PutObjectArgs;
+import io.minio.StatObjectResponse;
+import io.minio.errors.ErrorResponseException;
 import org.springframework.stereotype.Repository;
+import ru.codeportfolio.config.minio.MinioProperties;
 import ru.codeportfolio.dto.db.FileDto;
 import ru.codeportfolio.exception.DataAccessException;
 import ru.codeportfolio.exception.NotFoundResourceException;
@@ -13,10 +14,17 @@ import ru.codeportfolio.model.TypeFile;
 import java.io.InputStream;
 
 @Repository
-public class FileRepositoryImpl extends ResourceRepository implements FileRepository {
+public class FileRepositoryImpl implements FileRepository {
 
-    public FileRepositoryImpl(MyMinioTransactionManager manager, @Value("${spring.minio.bucket}") String bucketName) {
-        super(manager, bucketName);
+    private final MyMinioOperationManager manager;
+    private final String bucketName;
+    private final RepositoryActionHelper repositoryActionHelper;
+
+
+    public FileRepositoryImpl(MyMinioOperationManager manager, MinioProperties properties, RepositoryActionHelper repositoryActionHelper) {
+        this.bucketName = properties.bucket();
+        this.manager = manager;
+        this.repositoryActionHelper = repositoryActionHelper;
     }
 
 
@@ -33,7 +41,7 @@ public class FileRepositoryImpl extends ResourceRepository implements FileReposi
                             .contentType(contentType)
                             .build());
 
-            StatObjectResponse response = getStatResponse(path, client);
+            StatObjectResponse response = repositoryActionHelper.getStatResponse(path, client);
             return new FileDto(
                     response.object(),
                     response.size(),
@@ -46,7 +54,7 @@ public class FileRepositoryImpl extends ResourceRepository implements FileReposi
     public FileDto getInfo(String path) {
         return manager.executeAction(client ->
         {
-            StatObjectResponse response = getStatResponse(path, client);
+            StatObjectResponse response = repositoryActionHelper.getStatResponse(path, client);
             return new FileDto(
                     response.object(),
                     response.size(),
@@ -59,11 +67,11 @@ public class FileRepositoryImpl extends ResourceRepository implements FileReposi
     public FileDto move(String from, String to) {
         return manager.executeAction(client ->
         {
-            copyFile(from, to, client);
+            repositoryActionHelper.copyFile(from, to, client);
 
-            removeObject(from, client);
+            repositoryActionHelper.removeObject(from, client);
 
-            StatObjectResponse response = getStatResponse(to, client);
+            StatObjectResponse response = repositoryActionHelper.getStatResponse(to, client);
 
             if (response.object().isBlank()) {
                 throw new NotFoundResourceException();
@@ -82,7 +90,7 @@ public class FileRepositoryImpl extends ResourceRepository implements FileReposi
     public void delete(String path) {
         manager.executeInTransactionWithoutReturn(client ->
         {
-            removeObject(path, client);
+            repositoryActionHelper.removeObject(path, client);
         });
 
     }
@@ -90,7 +98,7 @@ public class FileRepositoryImpl extends ResourceRepository implements FileReposi
     public boolean isExist(String path) {
         return manager.executeAction(client -> {
             try {
-                getStatResponse(path, client);
+                repositoryActionHelper.getStatResponse(path, client);
                 return true;
             } catch (ErrorResponseException e) {
                 if (e.errorResponse().code().equals("NoSuchKey")) {

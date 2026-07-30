@@ -17,12 +17,12 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 @Component
-public class MyMinioTransactionManager {
+public class MyMinioOperationManager {
 
     private final MinioClient minioClient;
     private final String bucketName;
 
-    public MyMinioTransactionManager(MinioClient minioClient, @Value("${spring.minio.bucket}") String bucketName) {
+    public MyMinioOperationManager(MinioClient minioClient, @Value("${spring.minio.bucket}") String bucketName) {
         this.minioClient = minioClient;
         this.bucketName = bucketName;
     }
