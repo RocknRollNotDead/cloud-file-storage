@@ -28,7 +28,7 @@ public class UserService {
     public UserDto createUser(String username, String password) {
 
         username = Validator.validateUsername(username);
-        password = Validator.validatePassword(password);
+        password = Validator.validatePasswordWithLength(password);
 
         password = passwordEncoder.encode(password);
         User user;

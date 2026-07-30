@@ -21,6 +21,7 @@ import ru.codeportfolio.dto.RequestAuthDto;
 import ru.codeportfolio.dto.UserDto;
 import ru.codeportfolio.exception.ValidationException;
 import ru.codeportfolio.service.UserService;
+import ru.codeportfolio.util.Validator;
 
 @RestController
 @RequestMapping("/auth")
@@ -42,9 +43,12 @@ public class AuthController {
                                          HttpServletResponse response,
                                          @RequestBody(required = false) RequestAuthDto req) {
 
-        if (req == null || req.username() == null || req.password() == null) {
+        if (req == null) {
             throw new ValidationException("Invalid request! Body of request or username or password is empty!");
         }
+
+        Validator.validateUsername(req.username());
+        Validator.validatePassword(req.password());
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -72,6 +76,10 @@ public class AuthController {
     @PostMapping("/sign-up")
     public ResponseEntity<UserDto> createUser(
             @RequestBody(required = false) RequestAuthDto req) {
+
+        if (req == null){
+            throw new ValidationException("Bad request - no username and password");
+        }
 
         UserDto userDto = service.createUser(req.username(), req.password());
         return ResponseEntity.status(HttpStatus.CREATED).body(userDto);

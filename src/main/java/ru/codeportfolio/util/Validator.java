@@ -15,12 +15,18 @@ public final class Validator {
         return username.trim();
     }
 
+    public static String validatePasswordWithLength(String password) {
+        password = validatePassword(password);
+
+        if (password.length() < minLengthPassword) {
+            throw new ValidationException("Password length must be more than %d symbols".formatted(minLengthPassword));
+        }
+        return password;
+    }
+
     public static String validatePassword(String password) {
         if (password == null || password.isBlank()) {
             throw new ValidationException("Error to validation password. Your password = \"%s\"".formatted(password));
-        }
-        if (password.length() < minLengthPassword) {
-            throw new ValidationException("Password length must be more than %d symbols".formatted(minLengthPassword));
         }
         return password.trim();
     }
