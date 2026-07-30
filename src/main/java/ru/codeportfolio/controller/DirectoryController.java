@@ -10,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import ru.codeportfolio.dto.CreateFolderResponseDto;
 import ru.codeportfolio.dto.ResourceResponseDto;
-import ru.codeportfolio.service.FilesService;
+import ru.codeportfolio.service.FileService;
 
 import java.util.List;
 
@@ -18,9 +18,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/directory")
 public class DirectoryController {
-    private final FilesService service;
+    private final FileService service;
 
-    public DirectoryController(FilesService service) {
+    public DirectoryController(FileService service) {
         this.service = service;
     }
 

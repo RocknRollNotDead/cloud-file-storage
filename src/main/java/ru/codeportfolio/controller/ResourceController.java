@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.codeportfolio.dto.ResourceResponseDto;
 import ru.codeportfolio.exception.ValidationException;
-import ru.codeportfolio.service.FilesService;
+import ru.codeportfolio.service.FileService;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,11 +23,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/resource")
 @Tag(name = "Ресурсы", description = "Операции с файлами и папками")
-public class FilesController {
+public class ResourceController {
 
-    private final FilesService service;
+    private final FileService service;
 
-    public FilesController(FilesService service) {
+    public ResourceController(FileService service) {
         this.service = service;
     }
 

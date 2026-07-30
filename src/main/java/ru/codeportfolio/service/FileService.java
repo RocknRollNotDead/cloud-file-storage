@@ -15,6 +15,7 @@ import ru.codeportfolio.dto.UsersSizeDto;
 import ru.codeportfolio.dto.db.FileDto;
 import ru.codeportfolio.exception.*;
 import ru.codeportfolio.model.User;
+import ru.codeportfolio.util.FolderUtil;
 import ru.codeportfolio.util.ResourceMapper;
 import ru.codeportfolio.util.Validator;
 
@@ -28,7 +29,7 @@ import java.util.zip.ZipOutputStream;
 
 @Service
 @Slf4j
-public class FilesService {
+public class FileService {
 
     public static final long MAX_SIZE_STORAGE_FOR_ONE_USER = 500_000_000L;
     public static final long MEGABYTE = 1_000_000L;
@@ -39,7 +40,7 @@ public class FilesService {
     private final UserRepository userRepository;
 
 
-    public FilesService(FileRepository fileRepository, FolderRepository foldersRepository, UserRepository userRepository) {
+    public FileService(FileRepository fileRepository, FolderRepository foldersRepository, UserRepository userRepository) {
         this.fileRepository = fileRepository;
         this.folderRepository = foldersRepository;
         this.userRepository = userRepository;
@@ -49,7 +50,7 @@ public class FilesService {
     // папки /directory - 1C, 1R
     public CreateFolderResponseDto createFolder(String path, String username) {
         path = handleRequestAndReturnPath(path, username);
-        if (!isFolder(path)) {
+        if (!FolderUtil.isFolder(path)) {
             throw new ValidationException("This is no folder, this is file!");
         }
         if (folderRepository.isExist(path)) {
@@ -72,7 +73,7 @@ public class FilesService {
 
         path = handleRequestAndReturnPath(path, username);
 
-        if (!isFolder(path)) {
+        if (!FolderUtil.isFolder(path)) {
             throw new ValidationException("This is no folder, this is file!");
         }
 
@@ -144,7 +145,7 @@ public class FilesService {
 
         path = handleRequestAndReturnPath(path, username);
 
-        if (!isFolder(path)) {
+        if (!FolderUtil.isFolder(path)) {
             return ResourceMapper.mapResource(
                     fileRepository.getInfo(path)
             );
@@ -160,7 +161,7 @@ public class FilesService {
     public void getResource(String path, OutputStream outputStream, String username) {
         path = handleRequestAndReturnPath(path, username);
 
-        if (isFolder(path)) {
+        if (FolderUtil.isFolder(path)) {
             streamFolderAsZipFile(path, outputStream);
         } else {
             streamFile(path, outputStream);
@@ -179,13 +180,13 @@ public class FilesService {
 
         from = handleRequestAndReturnPath(from, username);
         to = handleRequestAndReturnPath(to, username);
-        if (isFolder(from) && isFolder(to)) {
+        if (FolderUtil.isFolder(from) && FolderUtil.isFolder(to)) {
             if (folderRepository.isExist(to)) {
                 throw new AlreadyExistException("Target folder already exist!");
             }
             folderRepository.move(from, to);
             return ResourceMapper.mapFolder(to);
-        } else if (!isFolder(from) && !isFolder(to)) {
+        } else if (!FolderUtil.isFolder(from) && !FolderUtil.isFolder(to)) {
             if (fileRepository.isExist(to)) {
                 throw new AlreadyExistException("Target file already exist!");
             }
@@ -200,7 +201,7 @@ public class FilesService {
     public void delete(String path, String username) {
         path = handleRequestAndReturnPath(path, username);
 
-        if (isFolder(path)) {
+        if (FolderUtil.isFolder(path)) {
             if (!folderRepository.isExist(path)) {
                 throw new NotFoundException("Folder not found!");
             }
@@ -221,7 +222,7 @@ public class FilesService {
 
         String path = getUserPath(id, "");
         folderRepository.delete(path);
-
+        log.info("Delete all files " + path);
     }
 
 
@@ -286,9 +287,7 @@ public class FilesService {
 
 
 
-    private boolean isFolder(String path) {
-        return path.charAt(path.length() - 1) == '/';
-    }
+
 
     private boolean isExistParentalFolder(String path) {
         String[] folders = path.split("/");

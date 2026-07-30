@@ -35,9 +35,9 @@ public class UserService {
         try {
             user = userRepository.save(new User(username, password, Role.USER));
         } catch (DataIntegrityViolationException e) {
+            
             throw new AlreadyExistException("Username %s already exist.".formatted(username));
         }
-
 
         return new UserDto(user.getLogin());
     }

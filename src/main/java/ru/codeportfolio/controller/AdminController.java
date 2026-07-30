@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.codeportfolio.dto.UsersSizeDto;
-import ru.codeportfolio.service.FilesService;
+import ru.codeportfolio.service.FileService;
 
 import java.util.List;
 
@@ -13,21 +13,21 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
-    private final FilesService filesService;
+    private final FileService fileService;
 
-    public AdminController(FilesService filesService) {
-        this.filesService = filesService;
+    public AdminController(FileService fileService) {
+        this.fileService = fileService;
     }
 
     @GetMapping("/users")
     public ResponseEntity<List<UsersSizeDto>> getUsers() {
-        return ResponseEntity.ok(filesService.getUsers());
+        return ResponseEntity.ok(fileService.getUsers());
 
     }
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUserFiles(@PathVariable Long id) {
-        filesService.deleteAllUserFilesByUserId(id);
+        fileService.deleteAllUserFilesByUserId(id);
         return ResponseEntity.noContent().build();
     }
 }
