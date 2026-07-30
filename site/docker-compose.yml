@@ -84,7 +84,7 @@ services:
       minio:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8081/" ]
+      test: ["CMD-SHELL", "curl -s http://localhost:8081/ || exit 1"]
       start_period: 40s
     ports:
       - "8080:8081"
@@ -96,10 +96,6 @@ services:
       VIRTUAL_PORT: 80
       LETSENCRYPT_HOST: cloud-file-storage.codeportfolio.ru
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
-    depends_on:
-      # хотя зачем, оно же пользы не принесёт, только дольше подниматься будет. Может снести? Крч я знаю что так можно сделать, и знаю что лучше снести
-      app-cloud:
-        condition: service_healthy
 
     expose:
       - "80"
@@ -143,7 +139,7 @@ services:
         max-size: "10m"
         max-file: "5"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d mydb" ]
+      test:  [ "CMD-SHELL", "curl -f http://localhost:9010/minio/health/ready || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5

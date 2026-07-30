@@ -15,6 +15,7 @@ Swagger доступен по http://193.168.46.216:8080/swagger-ui.html или 
 - REST API на Spring Boot со Spring Security, а в качестве хранения используются postgresql, Redis и minIO (S3)
 
 **Frontend** — [взят со страницы с проектом](https://github.com/zhukovsd/cloud-storage-frontend), автор Сергей Жуков.
+Но я чуть-чуть подправил под себя, мой репозиторий с форком этого фронта - https://github.com/RocknRollNotDead/cloud-storage-frontend
 
 ## Функциональность
 
@@ -81,6 +82,11 @@ Swagger доступен по http://193.168.46.216:8080/swagger-ui.html или 
 Также эта информация указана в swagger - 
 https://cloud-file-storage.codeportfolio.ru/swagger-ui/index.html, http://193.168.46.216:8080/swagger-ui/index.html
 https://cloud-file-storage.codeportfolio.ru/swagger-ui.html, http://193.168.46.216:8080/swagger-ui.html
+
+## Комментарии к эндпоинтам
+
+При загрузке файлов при ошибке загрузки файла все остальные файлы догрузятся, потом прилетит ошибка с именами загруженных и не загруженных файлов.
+
 
 ## Как буду деплоить
 
@@ -213,7 +219,15 @@ ls -la /usr/local/tomcat/logs
 
 acme сам получит SSL сертификат по переменным
 
-И после этого всё приложение будет доступно и по https://cloud-file-storage.codeportfolio.ru (https с SSL сертификатом)
+```yaml
+    frontend:
+      VIRTUAL_HOST: 
+      VIRTUAL_PORT: 
+      LETSENCRYPT_HOST: 
+      LETSENCRYPT_EMAIL:
+```
+
+И после этого всё приложение доступно по https://cloud-file-storage.codeportfolio.ru (https с SSL сертификатом)
 
 
 ## О том, что изучил на этом проекте
