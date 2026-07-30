@@ -19,15 +19,7 @@ import java.util.Map;
 @Slf4j
 public class MyExceptionHandler {
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleGeneric(NotFoundException e) {
-        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
-    }
 
-    @ExceptionHandler(AlreadyExistException.class)
-    public ResponseEntity<Map<String, String>> handleGeneric(AlreadyExistException e) {
-        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
-    }
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Map<String, String>> handleGeneric(ValidationException e) {
@@ -49,6 +41,16 @@ public class MyExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> handleGeneric(AccessDeniedException e) {
         return buildResponse(HttpStatus.FORBIDDEN, "Access denied!!!");
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleGeneric(NotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(AlreadyExistException.class)
+    public ResponseEntity<Map<String, String>> handleGeneric(AlreadyExistException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
     @ExceptionHandler(OutOfMemoryException.class)

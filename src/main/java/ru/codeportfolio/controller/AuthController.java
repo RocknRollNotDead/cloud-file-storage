@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.codeportfolio.dto.RequestAuthDto;
 import ru.codeportfolio.dto.UserDto;
+import ru.codeportfolio.exception.ValidationException;
 import ru.codeportfolio.service.UserService;
 
 @RestController
@@ -36,8 +37,8 @@ public class AuthController {
                                          HttpServletResponse response,
                                          @RequestBody(required = false) RequestAuthDto req) {
 
-        if (req == null) {
-            return ResponseEntity.badRequest().build();
+        if (req == null || req.username() == null || req.password() == null) {
+            throw new ValidationException("Invalid request! Body of request or username or password is empty!");
         }
 
         Authentication authentication = authenticationManager.authenticate(
@@ -51,16 +52,8 @@ public class AuthController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
-//        httpRequest.getSession(true)
-//                .setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context); todo разобраться
         SecurityContextRepository repository = new HttpSessionSecurityContextRepository();
         repository.saveContext(context, httpRequest, response);
-
-        // если необходимо будет 100% возвращения тела запроса UserDto, то
-//        response.setContentType("application/json");
-//        response.getWriter().write(
-//                objectMapper.writeValueAsString(new UserDto(req.username()))
-//        );
 
         return ResponseEntity.ok(new UserDto(req.username()));
 
