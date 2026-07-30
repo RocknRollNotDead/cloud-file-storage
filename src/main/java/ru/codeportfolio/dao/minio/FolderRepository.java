@@ -13,6 +13,7 @@ public interface FolderRepository {
     void save(String path);
 
     List<FileDto> getInfo(String path);
+
     List<FileDto> search(String query);
 
     void move(String from, String to);

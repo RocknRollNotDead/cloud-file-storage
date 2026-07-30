@@ -1,5 +1,9 @@
 server:
   port: 8081
+  servlet:
+    session:
+      cookie:
+        max-age: 7d
 spring:
   session:
     store-type: redis

@@ -23,7 +23,6 @@ public class FolderRepositoryImpl implements FolderRepository {
     private final MinioRepositoryHelper minioRepositoryHelper;
 
 
-
     public FolderRepositoryImpl(MyMinioOperationManager manager, MinioProperties properties, MinioRepositoryHelper minioRepositoryHelper) {
 
         this.manager = manager;
@@ -169,9 +168,6 @@ public class FolderRepositoryImpl implements FolderRepository {
             return result;
         });
     }
-
-
-
 
 
 }

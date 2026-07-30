@@ -22,7 +22,7 @@ public class ResourceStreamer {
     }
 
     /*package private*/ void streamFile(String path, OutputStream outputStream) {
-        try(InputStream fileStream = fileRepository.getStream(path)) {
+        try (InputStream fileStream = fileRepository.getStream(path)) {
 
             fileStream.transferTo(outputStream);
 

@@ -29,7 +29,6 @@ import java.util.List;
 public class FileService {
 
 
-
     private final FileRepository fileRepository;
     private final FolderRepository folderRepository;
 
@@ -91,7 +90,6 @@ public class FileService {
         List<ResourceResponseDto> result = new ArrayList<>();
 
 
-
         if (MemoryCheckUtil.checkMemoryForMemoryOverflow(
                 folderRepository.getSize(
                         handleRequestAndReturnPath("", username)) + files.size())) {
@@ -100,6 +98,13 @@ public class FileService {
                     "You're running low on disk space. Buy yourself a hard drive. Max size your files - %d MB"
                             .formatted(maxSize));
         }
+        /**
+         * Да, в ТЗ этого нет. Но мой сервер слабенький, туда нельзя загружать много файлов. Если загрузить, он упадёт.
+         * Это мой сервер, за который плачу я из своего кармана. Если бы это была реальная рабочая задача, я бы сначала
+         * объяснил это заказчику и попросил оплатить нормальный сервер, а при отказе сказал бы, что тогда без
+         * ограничения всё упадёт, и попросил бы правки в ТЗ. В таком случае при падении сервера ответственность явно не
+         * моя. А пока я плачу за сервер, у меня есть необходимость в таком отклонении от ТЗ.
+         * */
 
         log.info("{} upload {}:", username, files.size());
 
@@ -120,7 +125,7 @@ public class FileService {
                 failFilesDownloadNames.append(file.getOriginalFilename()).append("; ");
             }
 
-            try (InputStream stream = file.getInputStream()){
+            try (InputStream stream = file.getInputStream()) {
                 FileDto fileDto = fileRepository.save(
                         filePath,
                         stream,
@@ -137,7 +142,7 @@ public class FileService {
             }
 
         }
-        if (exceptionFlag){
+        if (exceptionFlag) {
             throw new AlreadyExistException(
                     "This files names %s already exist. The download was interrupted. Was save files: %s"
                             .formatted(failFilesDownloadNames, filesNames));
@@ -168,11 +173,13 @@ public class FileService {
         path = handleRequestAndReturnPath(path, username);
 
         if (FolderUtil.isFolder(path)) {
-            streamer.streamFolderAsZipFile(path, outputStream);
-        } else {
-            streamer.streamFile(path, outputStream);
-        }
-    }
+            streamer.streamFolderAsZipFile(path, outputStream); // я принципиально не хотел бы в учебном проекте
+        } else {                    // передавать byte[] вместо стрима для файлов - это плохая практика, мне кажется.
+            streamer.streamFile(path, outputStream); // плюс у меня слабый сервер. Если бы это было реальное тз,
+        }                           // я бы попросил скорректировать его. А если заказчик откажется, то попросил бы его
+    }                               // самого оплатить нормальный сервер, объяснив, что этот упадёт. А пока за сервер
+                                    // плачу я - приходится принимать такие решения поперёк тз, но в угоду решения
+                                    // проблемы, которая последует за выбором byte[].
 
     public List<ResourceResponseDto> search(String query, String username) {
 
@@ -231,6 +238,7 @@ public class FileService {
         log.info("Delete all files {}", path);
     }
 
+    // Зачем эти два метода сверху и снизу, если их не требует ТЗ? Смотри пояснения в методе upload().
 
     public List<UsersSizeDto> getUsers() {
         List<User> users = userRepository.findAll();
@@ -250,7 +258,6 @@ public class FileService {
         }
         return result;
     }
-
 
 
     private boolean isExistParentalFolder(String path) {

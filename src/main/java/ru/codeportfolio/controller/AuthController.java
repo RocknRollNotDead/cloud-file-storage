@@ -77,7 +77,7 @@ public class AuthController {
     public ResponseEntity<UserDto> createUser(
             @RequestBody(required = false) RequestAuthDto req) {
 
-        if (req == null){
+        if (req == null) {
             throw new ValidationException("Bad request - no username and password");
         }
 

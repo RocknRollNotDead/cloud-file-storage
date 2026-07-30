@@ -5,14 +5,12 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import ru.codeportfolio.dao.func_interfaces.ConsumerThrowing;
 import ru.codeportfolio.dao.func_interfaces.FunctionThrowing;
 import ru.codeportfolio.exception.DataAccessException;
 import ru.codeportfolio.exception.NotFoundException;
 import ru.codeportfolio.exception.NotFoundResourceException;
-import ru.codeportfolio.exception.ValidationException;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;

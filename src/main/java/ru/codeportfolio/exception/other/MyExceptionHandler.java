@@ -20,7 +20,6 @@ import java.util.Map;
 public class MyExceptionHandler {
 
 
-
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Map<String, String>> handleGeneric(ValidationException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, e.getMessage());

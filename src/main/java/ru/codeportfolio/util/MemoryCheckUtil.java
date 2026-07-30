@@ -7,7 +7,7 @@ public final class MemoryCheckUtil {
     private MemoryCheckUtil() {
     }
 
-    public static long maxSizeFiles(){
+    public static long maxSizeFiles() {
         return Math.ceilDiv(MAX_SIZE_STORAGE_FOR_ONE_USER, MEGABYTE);
     }
 
