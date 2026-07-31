@@ -9,6 +9,7 @@ import ru.codeportfolio.config.minio.MinioProperties;
 import ru.codeportfolio.dto.db.FileDto;
 import ru.codeportfolio.exception.NotFoundResourceException;
 import ru.codeportfolio.model.TypeFile;
+import ru.codeportfolio.util.FolderUtil;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
@@ -51,20 +52,29 @@ public class FolderRepositoryImpl implements FolderRepository {
     }
 
     @Override
-    public List<FileDto> search(String query) {
+    public List<FileDto> search(String query, String userFolderName) {
         return manager.executeAction(client ->
         {
 
             List<FileDto> result = new ArrayList<>();
 
-            for (Result<Item> item : minioRepositoryHelper.getListItems(client, query, false)) {
+            for (Result<Item> item : minioRepositoryHelper.getListItems(client, userFolderName, true)) {
 
                 var resource = item.get();
+
+                String[] foldersAndFileName = resource.objectName().split("/");
+
+                String originalName = foldersAndFileName[foldersAndFileName.length - 1];
+
+                if (!originalName.contains(query)){
+                    System.out.println(originalName + " query: " + query);
+                    continue;
+                }
 
                 result.add(new FileDto(
                         resource.objectName(),
                         resource.size(),
-                        resource.isDir() ? TypeFile.DIRECTORY : TypeFile.FILE));
+                        FolderUtil.isFolder(resource.objectName()) ? TypeFile.DIRECTORY : TypeFile.FILE));
             }
             return result;
         });

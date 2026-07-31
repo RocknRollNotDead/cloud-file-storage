@@ -349,7 +349,7 @@ class MinioControllerTest extends IntegrationTestBase {
 
                 .andExpect(status().isCreated());
 
-        makePostRequestWithPath(API_DIRECTORY, "docs7/1/")
+        makePostRequestWithPath(API_DIRECTORY, "docs7/unique_name/")
 
                 .andExpect(status().isCreated());
 
@@ -357,9 +357,9 @@ class MinioControllerTest extends IntegrationTestBase {
 
                 .andExpect(status().isCreated());
 
-        makeGetRequestWithQuery(API_RESOURCE_SEARCH, "docs7/1")
+        makeGetRequestWithQuery(API_RESOURCE_SEARCH, "unique_name")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("1"))
+                .andExpect(jsonPath("$[0].name").value("unique_name"))
                 .andExpect(jsonPath("$[0].path").value("/docs7/"))
                 .andExpect(jsonPath("$[0].type").value("DIRECTORY"));
 
@@ -370,19 +370,7 @@ class MinioControllerTest extends IntegrationTestBase {
     @Test
     void shouldBeNotSearch() throws Exception {
 
-        makePostRequestWithPath(API_DIRECTORY, "docs7_1/")
-
-                .andExpect(status().isCreated());
-
-        makePostRequestWithPath(API_DIRECTORY, "docs7_1/1/")
-
-                .andExpect(status().isCreated());
-
-        makePostRequestWithPath(API_DIRECTORY, "docs7_1/2/")
-
-                .andExpect(status().isCreated());
-
-        makeGetRequestWithQuery(API_RESOURCE_SEARCH, "3")
+        makeGetRequestWithQuery(API_RESOURCE_SEARCH, "unique_search")
                 .andExpect(jsonPath("$").isEmpty());
     }
 

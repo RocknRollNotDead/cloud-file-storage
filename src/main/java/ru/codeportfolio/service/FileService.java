@@ -2,6 +2,7 @@ package ru.codeportfolio.service;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.codeportfolio.dao.UserRepository;
@@ -185,9 +186,11 @@ public class FileService {
 
     public List<ResourceResponseDto> search(String query, String username) {
 
-        query = handleRequestAndReturnPath(query, username);
+        var request = validateRequest(query, username);
+        query = request.path;
+        String userFolderPath = getUserPathByUsername(request.username, "");
 
-        return ResourceMapper.mapResourcesInFolder(folderRepository.search(query));
+        return ResourceMapper.mapResourcesInFolder(folderRepository.search(query, userFolderPath));
 
     }
 
@@ -294,14 +297,30 @@ public class FileService {
     }
 
     private String handleRequestAndReturnPath(String path, String username) {
-        username = Validator.validateUsername(username);
-        path = Validator.validatePath(path);
+        ValidatedRequestDto validated = validateRequest(path, username);
 
+        return getUserPathByUsername(validated.username, validated.path);
+
+    }
+
+    private @NonNull String getUserPathByUsername(String username, String path) {
+        Long userId = getUserIdAndCreatePath(username);
+        return getUserPath(userId, path);
+    }
+
+    private Long getUserIdAndCreatePath(String username) {
         Long userId = userRepository.findUsersByLogin(username).orElseThrow(() -> new NotFoundException("User not found!")).getId();
         createUserFolder(userId);
+        return userId;
+    }
 
-        return getUserPath(userId, path);
+    private static @NonNull ValidatedRequestDto validateRequest(String path, String username) {
+        username = Validator.validateUsername(username);
+        path = Validator.validatePath(path);
+        return new ValidatedRequestDto(path, username);
+    }
 
+    private record ValidatedRequestDto(String path, String username) {
     }
 
 }

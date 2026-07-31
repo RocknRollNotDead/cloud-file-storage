@@ -61,9 +61,7 @@ public final class ResourceMapper {
             String nameFolder = pathAndName[pathAndName.length - 1];
             path = getPathFromPathAndName(pathAndName, true);
 
-//            TypeFile type = FolderUtil.isFolder(fileDto.name()) ? TypeFile.DIRECTORY : TypeFile.FILE; // сделано для recursive = true. Возможно ещё вернусь к такому варианту поиска, но пока что там false
-//                                                                  возможно вернусь когда у меня будет сервер повыносливее, сейчас совсем хлипкий, что даже одна мини операция может положить его.
-            result.add(
+           result.add(
                     new ResourceResponseDto(
                             path,
                             nameFolder,

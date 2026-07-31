@@ -14,7 +14,7 @@ public interface FolderRepository {
 
     List<FileDto> getInfo(String path);
 
-    List<FileDto> search(String query);
+    List<FileDto> search(String query, String userFolderName);
 
     void move(String from, String to);
 
