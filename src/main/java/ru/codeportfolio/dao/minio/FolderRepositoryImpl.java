@@ -156,13 +156,14 @@ public class FolderRepositoryImpl implements FolderRepository {
 
             for (Result<Item> item : minioRepositoryHelper.getListItems(client, path, false)) {
 
+                var resource = item.get();
                 if (item.get().objectName().equals(path)) {
                     continue;
                 }
                 result.add(new FileDto(
-                        item.get().objectName(),
-                        item.get().isDir() ? null : item.get().size(),
-                        item.get().isDir() ? TypeFile.DIRECTORY : TypeFile.FILE
+                        resource.objectName(),
+                        resource.isDir() ? null : item.get().size(),
+                        resource.isDir() ? TypeFile.DIRECTORY : TypeFile.FILE
                 ));
             }
             return result;

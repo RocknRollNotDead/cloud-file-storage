@@ -61,14 +61,12 @@ public final class ResourceMapper {
             String nameFolder = pathAndName[pathAndName.length - 1];
             path = getPathFromPathAndName(pathAndName, true);
 
-            TypeFile type = FolderUtil.isFolder(path) ? TypeFile.DIRECTORY : TypeFile.FILE;
-
             result.add(
                     new ResourceResponseDto(
                             path,
                             nameFolder,
                             fileDto.size(),
-                            type
+                            fileDto.typeFile()
                     )
             );
 

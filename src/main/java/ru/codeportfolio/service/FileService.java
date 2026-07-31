@@ -78,6 +78,7 @@ public class FileService {
 
             return ResourceMapper.mapResourcesInFolder(folderRepository.getInfo(path));
         } else {
+            log.info("not found {}", path);
             throw new NotFoundException("Folder not found!");
         }
     }
