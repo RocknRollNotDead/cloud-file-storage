@@ -54,14 +54,17 @@ public class FolderRepositoryImpl implements FolderRepository {
     public List<FileDto> search(String query) {
         return manager.executeAction(client ->
         {
+
             List<FileDto> result = new ArrayList<>();
 
-            for (Result<Item> item : minioRepositoryHelper.getListItems(client, query, true)) {
+            for (Result<Item> item : minioRepositoryHelper.getListItems(client, query, false)) {
+
+                var resource = item.get();
 
                 result.add(new FileDto(
-                        item.get().objectName(),
-                        item.get().size(),
-                        item.get().isDir() ? TypeFile.DIRECTORY : TypeFile.FILE));
+                        resource.objectName(),
+                        resource.size(),
+                        resource.isDir() ? TypeFile.DIRECTORY : TypeFile.FILE));
             }
             return result;
         });

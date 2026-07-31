@@ -78,7 +78,7 @@ class MinioControllerTest extends IntegrationTestBase {
 
         MockMultipartFile file = getMockMultipartFile("test.txt");
 
-        uploadTestFile(file, "docs0/");
+        uploadTestFile(file, "docs0/", "test.txt");
 
         makeGetRequestWithPath("/api/resource/download", "docs0/test.txt")
                 .andExpect(status().isOk())
@@ -147,7 +147,7 @@ class MinioControllerTest extends IntegrationTestBase {
 
         MockMultipartFile file = getMockMultipartFile("test.txt");
 
-        uploadTestFile(file, "docs12/");
+        uploadTestFile(file, "docs12/", "test.txt");
 
 
         makeGetRequestWithPath(API_RESOURCE, "docs12/test.txt")
@@ -192,7 +192,7 @@ class MinioControllerTest extends IntegrationTestBase {
 
         MockMultipartFile file = getMockMultipartFile("test.txt");
 
-        uploadTestFile(file, "docs15/");
+        uploadTestFile(file, "docs15/", "test.txt");
 
         mockMvc.perform(delete("/api/resource")
                         .with(user("test-user").roles("USER"))
@@ -255,7 +255,7 @@ class MinioControllerTest extends IntegrationTestBase {
 
         MockMultipartFile file = getMockMultipartFile("test.txt");
 
-        uploadTestFile(file, "docs3/1/");
+        uploadTestFile(file, "docs3/1/", "test.txt");
 
 
         mockMvc.perform(makePostRequestWithUser(API_RESOURCE_MOVE)
@@ -288,7 +288,7 @@ class MinioControllerTest extends IntegrationTestBase {
 
         MockMultipartFile file = getMockMultipartFile("test.txt");
 
-        uploadTestFile(file, "docs4/1/");
+        uploadTestFile(file, "docs4/1/", "test.txt");
 
 
         mockMvc.perform(makePostRequestWithUser(API_RESOURCE_MOVE)
@@ -391,7 +391,7 @@ class MinioControllerTest extends IntegrationTestBase {
     void shouldUploadFile() throws Exception {
         MockMultipartFile file = getMockMultipartFile("test.txt");
 
-        uploadTestFile(file, "");
+        uploadTestFile(file, "", "test.txt");
     }
 
 
@@ -416,6 +416,23 @@ class MinioControllerTest extends IntegrationTestBase {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$[0].name").value(".txt"));
     }
+
+    @Test
+    void shouldUploadFileAndGetTypeFile() throws Exception {
+        MockMultipartFile file = getMockMultipartFile("docs7_2/folder1/test.txt");
+        MockMultipartFile file2 = getMockMultipartFile("docs7_2/folder1/test2.txt");
+
+        uploadTestFile(file, "", "test.txt");
+        uploadTestFile(file2, "", "test2.txt");
+
+        makeGetRequestWithPath(API_DIRECTORY, "docs7_2/folder1/")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].type").value("FILE"))
+                .andExpect(jsonPath("$[1].type").value("FILE"))
+        ;
+
+    }
+
 
     // папки
 
@@ -512,10 +529,10 @@ class MinioControllerTest extends IntegrationTestBase {
     }
 
 
-    private void uploadTestFile(MockMultipartFile file, String path) throws Exception {
+    private void uploadTestFile(MockMultipartFile file, String path, String expectedFileName) throws Exception {
         makeMultipartRequest(file, path)
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$[0].name").value("test.txt"))
+                .andExpect(jsonPath("$[0].name").value(expectedFileName))
                 .andExpect(jsonPath("$[0].type").value("FILE"));
     }
 
