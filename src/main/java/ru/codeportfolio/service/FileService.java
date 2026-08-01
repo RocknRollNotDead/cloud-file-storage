@@ -14,10 +14,7 @@ import ru.codeportfolio.dto.UsersSizeDto;
 import ru.codeportfolio.dto.db.FileDto;
 import ru.codeportfolio.exception.*;
 import ru.codeportfolio.model.User;
-import ru.codeportfolio.util.FolderUtil;
-import ru.codeportfolio.util.MemoryCheckUtil;
-import ru.codeportfolio.util.ResourceMapper;
-import ru.codeportfolio.util.Validator;
+import ru.codeportfolio.util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,11 +34,18 @@ public class FileService {
 
     private final ResourceStreamer streamer;
 
-    public FileService(FileRepository fileRepository, FolderRepository foldersRepository, UserRepository userRepository, ResourceStreamer streamer) {
+    private final FolderPathDeterminant folderPathDeterminant;
+
+    public FileService(FileRepository fileRepository,
+                       FolderRepository foldersRepository,
+                       UserRepository userRepository,
+                       ResourceStreamer streamer,
+                       FolderPathDeterminant folderPathDeterminant) {
         this.fileRepository = fileRepository;
         this.folderRepository = foldersRepository;
         this.userRepository = userRepository;
         this.streamer = streamer;
+        this.folderPathDeterminant = folderPathDeterminant;
     }
 
 
@@ -181,8 +185,8 @@ public class FileService {
             streamer.streamFile(path, outputStream); // плюс у меня слабый сервер. Если бы это было реальное тз,
         }                           // я бы попросил скорректировать его. А если заказчик откажется, то попросил бы его
     }                               // самого оплатить нормальный сервер, объяснив, что этот упадёт. А пока за сервер
-                                    // плачу я - приходится принимать такие решения поперёк тз, но в угоду решения
-                                    // проблемы, которая последует за выбором byte[].
+    // плачу я - приходится принимать такие решения поперёк тз, но в угоду решения
+    // проблемы, которая последует за выбором byte[].
 
     public List<ResourceResponseDto> search(String query, String username) {
 
@@ -238,7 +242,7 @@ public class FileService {
             throw new ValidationException("Not found userId");
         }
 
-        String path = getUserPath(id, "");
+        String path = folderPathDeterminant.getPathWithUserFolder(id, "");
         folderRepository.delete(path);
         log.info("Delete all files {}", path);
     }
@@ -251,10 +255,11 @@ public class FileService {
 
         for (User user : users) {
             try {
+                Long fileSize = folderRepository.getSize(folderPathDeterminant.getFolderName(user.getId()));
                 result.add(new UsersSizeDto(
                         user.getLogin(),
                         user.getId(),
-                        folderRepository.getSize(getFolderName(user.getId()))
+                        fileSize
                 ));
             } catch (RuntimeException e) {
                 log.info("Error get user! {}", user.getLogin());
@@ -266,29 +271,16 @@ public class FileService {
 
 
     private boolean isExistParentalFolder(String path) {
-        String[] folders = path.split("/");
-        String fileName = folders[folders.length - 1];
-        String folderParentName = path.substring(0, path.length() - (fileName.length() + 1));
 
+        String folderParentName = folderPathDeterminant.getParentalFolderName(path);
 
         return folderRepository.isExist(folderParentName);
-    }
-
-    private String getUserPath(Long userId, String path) {
-        return "%s/%s".formatted(
-                getFolderName(userId),
-                path
-        );
-    }
-
-    private String getFolderName(Long userId) {
-        return "user-%d-files".formatted(userId);
     }
 
 
     private void createUserFolder(Long userId) {
 
-        String folderName = getFolderName(userId);
+        String folderName = folderPathDeterminant.getFolderName(userId);
 
         if (!folderRepository.isExist(folderName)) {
             folderRepository.save(folderName);
@@ -305,7 +297,7 @@ public class FileService {
 
     private @NonNull String getUserPathByUsername(String username, String path) {
         Long userId = getUserIdAndCreatePath(username);
-        return getUserPath(userId, path);
+        return folderPathDeterminant.getPathWithUserFolder(userId, path);
     }
 
     private Long getUserIdAndCreatePath(String username) {
