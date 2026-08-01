@@ -6,7 +6,6 @@ server:
         max-age: 7d
 spring:
   session:
-    store-type: redis
     timeout: 7d
 
   servlet:

@@ -15,7 +15,6 @@ import tools.jackson.databind.json.JsonMapper;
 import java.time.Duration;
 
 @Configuration
-@EnableRedisHttpSession
 public class SessionConfig {
     @Bean
     public RedisSerializer<Object> springSessionDefaultRedisSerializer() {
@@ -25,11 +24,4 @@ public class SessionConfig {
 
         return new GenericJacksonJsonRedisSerializer(mapper);
     }
-
-    @Bean
-    public SessionRepositoryCustomizer<RedisSessionRepository> sessionTimeoutCustomizer(
-            @Value("${spring.session.timeout}") Duration timeout) {
-        return repository -> repository.setDefaultMaxInactiveInterval(timeout);
-    }
-
 }
